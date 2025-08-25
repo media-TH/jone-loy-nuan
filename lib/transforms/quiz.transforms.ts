@@ -6,6 +6,26 @@
  */
 
 import type { Answer, QuestionWithAnswers } from "@/lib/types";
+import { z } from 'zod';
+
+// สร้าง Zod schema สำหรับ validation
+const RawAnswerSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  is_correct: z.boolean().optional(),
+  explanation: z.string().optional()
+});
+
+const RawAnswerArraySchema = z.array(RawAnswerSchema);
+
+/**
+ * Transform a single answer to frontend Answer type
+ */
+const transformAnswer = (answer: z.infer<typeof RawAnswerSchema>): Answer => ({
+  id: answer.id,
+  text: answer.text,
+  isCorrect: answer.is_correct || false
+});
 
 // Database answer type (from Supabase)
 export interface DbAnswer {
@@ -48,14 +68,32 @@ export const transformDbAnswers = (rawAnswers: RawAnswer[]): Answer[] => {
 export const transformQuestionWithAnswers = (
   question: QuestionWithAnswers
 ): QuestionWithAnswers & { transformedAnswers: Answer[] } => {
-  const transformedAnswers = question.answers 
-    ? transformDbAnswers(question.answers as RawAnswer[])
-    : [];
-
+  let transformedAnswers: Answer[] = []
+  
+  if (question.answers) {
+    try {
+      // Parse JSON ถ้าเป็น string
+      let parsedAnswers: unknown
+      if (typeof question.answers === 'string') {
+        parsedAnswers = JSON.parse(question.answers)
+      } else {
+        parsedAnswers = question.answers
+      }
+      
+      // Validate กับ Zod schema
+      const validatedAnswers = RawAnswerArraySchema.parse(parsedAnswers)
+      transformedAnswers = validatedAnswers.map(transformAnswer)
+      
+    } catch (error) {
+      console.error('Failed to parse/validate answers:', error)
+      console.error('Raw answers data:', question.answers)
+    }
+  }
+  
   return {
     ...question,
-    transformedAnswers,
-  };
+    transformedAnswers
+  }
 };
 
 /**

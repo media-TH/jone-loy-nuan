@@ -101,13 +101,15 @@ export function QuizClient({
 				const correctAnswers = responses.filter((r) => r.isCorrect).length;
 				const deviceInfo = QuizService.getDeviceInfo();
 
-				await QuizService.submitQuizResponse({
-					session_id: sessionId,
-					total_questions: totalQuestions,
-					correct_answers: correctAnswers,
-					device_type: deviceInfo.type,
-					user_agent: deviceInfo.userAgent,
-				});
+				if (sessionId) {
+					await QuizService.submitQuizResponse({
+						session_id: sessionId,
+						total_questions: totalQuestions,
+						correct_answers: correctAnswers,
+						device_type: deviceInfo.type,
+						user_agent: deviceInfo.userAgent,
+					});
+				}
 			} catch (err) {
 				console.error("Failed to save quiz summary:", err);
 			}
@@ -137,13 +139,15 @@ export function QuizClient({
 					const correctAnswers = responses.filter((r) => r.isCorrect).length;
 					const deviceInfo = QuizService.getDeviceInfo();
 
-					await QuizService.submitQuizResponse({
-						session_id: sessionId,
-						total_questions: totalQuestions,
-						correct_answers: correctAnswers,
-						device_type: deviceInfo.type,
-						user_agent: deviceInfo.userAgent,
-					});
+					if (sessionId) {
+						await QuizService.submitQuizResponse({
+							session_id: sessionId,
+							total_questions: totalQuestions,
+							correct_answers: correctAnswers,
+							device_type: deviceInfo.type,
+							user_agent: deviceInfo.userAgent,
+						});
+					}
 				} catch (err) {
 					console.error("Failed to save quiz summary:", err);
 				}
