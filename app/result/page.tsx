@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useQuizResultStore } from "@/store/quiz-store";
 import { RotateCcw, Home } from "lucide-react";
 import { useEffect, useMemo } from "react";
+import { getRiskAssessment } from "@/lib/transforms/quiz.transforms";
 
 export default function ResultPage() {
 	const router = useRouter();
@@ -20,52 +21,9 @@ export default function ResultPage() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	// 🎯 Result design mapping (ตามดีไซน์ใหม่)
+	// 🎯 Result design mapping using transform utilities
 	const resultDesign = useMemo(() => {
-		const scoreOutOfTen = total > 0 ? Math.round((score / total) * 10) : 0;
-
-		if (scoreOutOfTen <= 3) {
-			return {
-				scoreLabel: `${scoreOutOfTen}/10`,
-				title: "คุณเสี่ยงตกเป็นเหยื่อมิจฉาชีพ",
-				imageSrc: "/images/results/risk-high.svg",
-				imageAlt: "ผลลัพธ์ความเสี่ยงสูง (3/10)",
-				tips: [
-					"อย่าหลงเชื่อเมื่อมีคนเสนอเงินหรือขู่บังคับ",
-					"ปรึกษาคนรอบข้าง และค้นหาข้อมูลก่อน",
-					"ห้ามโอนเงิน หากเผลอโอนแล้วอย่าโอนเพิ่ม",
-					"ถ้าถูกหลอก ติดต่อสายด่วน 1441 เท่านั้น",
-				],
-			} as const;
-		}
-
-		if (scoreOutOfTen < 9) {
-			return {
-				scoreLabel: `${scoreOutOfTen}/10`,
-				title: "คุณพอจับพิรุธมิจฉาชีพได้",
-				imageSrc: "/images/results/risk-medium.svg",
-				imageAlt: "ผลลัพธ์ระดับกลาง (7/10)",
-				tips: [
-					"อย่าเชื่อข้อเสนอที่ดีเกินจริง แม้ดูน่าเชื่อถือ",
-					"ตรวจสอบชื่อบัญชี เบอร์โทร และเว็บไซต์ทุกครั้ง",
-					"ไม่โอนเงินให้ และหยุดทันทีหากถูกจูงใจเพิ่ม",
-					"หากสงสัยว่าจะถูกโกง ติดต่อสายด่วน 1441",
-				],
-			} as const;
-		}
-
-		return {
-			scoreLabel: `${scoreOutOfTen}/10`,
-			title: "คุณรู้เท่าทันมิจฉาชีพ",
-			imageSrc: "/images/results/risk-low.svg",
-			imageAlt: "ผลลัพธ์ดีมาก (10/10)",
-			tips: [
-				"แยกแยะข้อเสนอหลอกลวงและรู้ทันกลโกงได้",
-				"มีทักษะด้านความปลอดภัยไซเบอร์",
-				"ย้ำเตือนคนรอบข้าง ไม่ให้แชร์หรือโอนเงิน",
-				"หากพบคนถูกหลอก ส่งต่อข้อมูลให้โทร 1441",
-			],
-		} as const;
+		return getRiskAssessment(score, total);
 	}, [score, total]);
 
 	// 🎨 Animation Variants

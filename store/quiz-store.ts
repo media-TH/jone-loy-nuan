@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { QuizService, type DeviceInfo } from "@/lib/services/quiz.service";
 
 // --- Data Types ---
 
@@ -90,6 +91,7 @@ export const useQuizResultStore = create<QuizResultStore>()(
 
 			/**
 			 * Saves the final quiz summary to the backend API.
+			 * Now uses QuizService for centralized, deduplicated submissions.
 			 */
 			saveQuizSummaryToApi: async () => {
 				const { sessionId, responses, totalQuestions } = get();
@@ -97,29 +99,18 @@ export const useQuizResultStore = create<QuizResultStore>()(
 
 				try {
 					const correctAnswers = responses.filter((r) => r.isCorrect).length;
+					const deviceInfo = QuizService.getDeviceInfo();
 
 					const summaryData = {
 						session_id: sessionId,
 						total_questions: totalQuestions,
 						correct_answers: correctAnswers,
-						device_type: getDeviceType(),
-						user_agent:
-							typeof window !== "undefined" ? window.navigator.userAgent : "",
+						device_type: deviceInfo.type,
+						user_agent: deviceInfo.userAgent,
 					};
 
-					const response = await fetch("/api/quiz-reponse", {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-						},
-						body: JSON.stringify(summaryData),
-					});
-
-					if (!response.ok) {
-						throw new Error(`HTTP error! status: ${response.status}`);
-					}
-
-					console.log("Quiz summary saved successfully");
+					await QuizService.submitQuizResponse(summaryData);
+					console.log("Quiz summary saved successfully via QuizService");
 				} catch (error) {
 					console.error("Failed to save quiz summary:", error);
 				}
@@ -131,13 +122,4 @@ export const useQuizResultStore = create<QuizResultStore>()(
 	)
 );
 
-/**
- * Utility function to determine the device type.
- */
-function getDeviceType(): "mobile" | "tablet" | "desktop" {
-	if (typeof window === "undefined") return "desktop";
-	const width = window.innerWidth;
-	if (width < 640) return "mobile";
-	if (width < 1024) return "tablet";
-	return "desktop";
-}
+// Device detection moved to QuizService.getDeviceInfo()

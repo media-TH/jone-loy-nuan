@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import type { Answer, QuizResult, QuestionWithAnswers } from "@/lib/types";
 import { useQuizResultStore } from "@/store/quiz-store";
 import { motion } from "framer-motion";
+import { QuizService } from "@/lib/services/quiz.service";
+import { transformDbAnswers, isAnswerCorrect } from "@/lib/transforms/quiz.transforms";
 
 // Components
 import { QuestionSection } from "./question-section";
@@ -13,14 +15,7 @@ import { AnswerPanel } from "./answer-panel";
 import { ResultCard } from "./result-card";
 import { QuizBackground } from "./quiz-background";
 
-// เพิ่ม getDeviceType utility
-function getDeviceType() {
-	if (typeof window === "undefined") return "desktop";
-	const width = window.innerWidth;
-	if (width < 640) return "mobile";
-	if (width < 1024) return "tablet";
-	return "desktop";
-}
+// Device detection moved to QuizService.getDeviceInfo()
 
 export function QuizClient({
 	initialQuestions,
@@ -63,40 +58,17 @@ export function QuizClient({
 		return questions[currentIndex];
 	}, [questions, currentIndex]);
 
-	// ✨ NEW: Transform answers from DB to match frontend type
+	// ✨ Transform answers from DB to match frontend type using utilities
 	const answers = useMemo((): Answer[] => {
 		if (!currentQuestion?.answers || !Array.isArray(currentQuestion.answers)) {
 			return [];
 		}
-
-		type DbAnswer = {
-			id: string;
-			answer_text: string;
-			is_correct: boolean;
-		};
-
-		type RawAnswer = Answer | DbAnswer;
-
-		const rawAnswers = currentQuestion.answers as RawAnswer[];
-
-		return rawAnswers.map((ans) => {
-			if ("text" in ans && "isCorrect" in ans) {
-				return ans; // already Answer type
-			}
-
-			const dbAns = ans as DbAnswer;
-			return {
-				id: dbAns.id,
-				text: dbAns.answer_text,
-				isCorrect: dbAns.is_correct,
-			} satisfies Answer;
-		});
+		return transformDbAnswers(currentQuestion.answers as any[]);
 	}, [currentQuestion]);
 
 	const isCorrect = useMemo(() => {
 		if (!selectedAnswer) return null;
-		const answer = answers.find((a) => a.id === selectedAnswer);
-		return answer?.isCorrect || false;
+		return isAnswerCorrect(answers, selectedAnswer);
 	}, [answers, selectedAnswer]);
 
 	const isLastQuestion = currentIndex === questions.length - 1;
@@ -121,22 +93,19 @@ export function QuizClient({
 		if (!isLastQuestion) {
 			setCurrentIndex((prevIndex) => prevIndex + 1);
 		} else {
-			// Complete quiz: save summary via API then navigate to survey
+			// Complete quiz: save summary via QuizService then navigate to survey
 			try {
 				const { sessionId, responses, totalQuestions } =
 					useQuizResultStore.getState();
 				const correctAnswers = responses.filter((r) => r.isCorrect).length;
-				await fetch("/api/quiz-response", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						session_id: sessionId,
-						total_questions: totalQuestions,
-						correct_answers: correctAnswers,
-						device_type: getDeviceType(),
-						user_agent:
-							typeof navigator !== "undefined" ? navigator.userAgent : "",
-					}),
+				const deviceInfo = QuizService.getDeviceInfo();
+
+				await QuizService.submitQuizResponse({
+					session_id: sessionId,
+					total_questions: totalQuestions,
+					correct_answers: correctAnswers,
+					device_type: deviceInfo.type,
+					user_agent: deviceInfo.userAgent,
 				});
 			} catch (err) {
 				console.error("Failed to save quiz summary:", err);
@@ -165,17 +134,14 @@ export function QuizClient({
 					const { sessionId, responses, totalQuestions } =
 						useQuizResultStore.getState();
 					const correctAnswers = responses.filter((r) => r.isCorrect).length;
-					await fetch("/api/quiz-response", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							session_id: sessionId,
-							total_questions: totalQuestions,
-							correct_answers: correctAnswers,
-							device_type: getDeviceType(),
-							user_agent:
-								typeof navigator !== "undefined" ? navigator.userAgent : "",
-						}),
+					const deviceInfo = QuizService.getDeviceInfo();
+
+					await QuizService.submitQuizResponse({
+						session_id: sessionId,
+						total_questions: totalQuestions,
+						correct_answers: correctAnswers,
+						device_type: deviceInfo.type,
+						user_agent: deviceInfo.userAgent,
 					});
 				} catch (err) {
 					console.error("Failed to save quiz summary:", err);
