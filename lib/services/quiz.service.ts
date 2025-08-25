@@ -76,23 +76,13 @@ export class QuizService {
   }
   
   /**
-   * Internal method to perform the actual API submission
+   * Internal method to perform the actual submission using Server Action
    */
   private static async _performSubmission(data: QuizResponseData): Promise<void> {
-    const response = await fetch('/api/quiz-response', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    const { saveQuizResponse } = await import('@/lib/actions/quiz');
     
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
-      throw new Error(`Quiz submission failed: ${response.status} - ${errorText}`);
-    }
+    const result = await saveQuizResponse(data);
     
-    const result = await response.json().catch(() => ({}));
     if (!result.success) {
       throw new Error(`Quiz submission failed: ${result.message || 'Unknown error'}`);
     }

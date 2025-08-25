@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePinScenarioAnimations } from "@/hooks/usePinScenarioAnimations";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface RedFlagOverlayProps {
 	show: boolean;
@@ -34,14 +35,16 @@ export function RedFlagOverlay({ show, questionOrderIndex = 1 }: RedFlagOverlayP
 						initial="hidden"
 						animate="visible"
 						exit="hidden"
-						style={{ opacity: 1 }} // Force opacity: 1
+						style={{ opacity: 1 }}
 					>
 						<div className="relative" style={{ opacity: 1 }}>
-							<img
+							<Image
 								src="/images/scenarios/question-1/redflag-pin.svg"
 								alt="Red flag pin warning"
-								className="w-64 h-auto transform scale-125 sm:scale-100 md:scale-125"
+								className="w-64 h-auto transform scale-150"
 								style={{ opacity: 1 }}
+								width={256}
+								height={256}
 							/>
 						</div>
 					</motion.div>
@@ -53,11 +56,11 @@ export function RedFlagOverlay({ show, questionOrderIndex = 1 }: RedFlagOverlayP
 						initial="hidden"
 						animate="visible"
 						exit="hidden"
-						style={{ opacity: 1 }} // Force opacity: 1
+						style={{ opacity: 1 }} 
 					>
 						<div 
 							className="w-full text-sm text-white text-center rounded-lg px-3 py-2 mx-auto max-w-sm"
-							style={{ opacity: 1, backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+							style={{ opacity: 1 }}
 						>
 							*แบบทดสอบนี้ไม่มีการจัดเก็บรหัสผ่านของผู้ใช้
 						</div>
