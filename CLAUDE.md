@@ -161,3 +161,12 @@ Centralized animation configuration through `useQuizAnimations` hook provides:
 - Two disabled rules: `react/no-unescaped-entities` and `@next/next/no-page-custom-font`
 - Tailwind CSS v4 with CSS variables for theming
 - Font loading: Inter (primary) + Prompt (Thai) with display swap optimization
+- Path aliases: `@/*` maps to project root for cleaner imports
+- Development server runs on default port 3000
+
+### Common Development Patterns
+- Server actions for all database mutations (no client-side database calls)
+- Consistent error handling with try-catch in async operations
+- TypeScript interfaces defined in `lib/types.ts` for all major data structures
+- Component props extend interfaces for type safety
+- Zustand store with devtools for state debugging
