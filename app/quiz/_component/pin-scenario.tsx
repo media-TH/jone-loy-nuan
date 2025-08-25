@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { usePinScenarioAnimations } from "@/hooks/usePinScenarioAnimations";
 
 // Type definitions
 interface OTPSlotProps {
@@ -142,6 +143,18 @@ export default function IntegratedPinScenario({
 	const maxLength = 6;
 	const inputRef = useRef<HTMLDivElement>(null);
 
+	// Use animation hook
+	const {
+		redFlagVariants,
+		noteVariants,
+		overlayVariants,
+		containerVariants,
+		buttonsVariants,
+		showRedFlag,
+		showNote,
+		showOverlay,
+	} = usePinScenarioAnimations(answered);
+
 	// Auto-focus management
 	useEffect(() => {
 		setActiveIndex(Math.min(value.length, maxLength - 1));
@@ -225,20 +238,22 @@ export default function IntegratedPinScenario({
 	];
 
 	return (
-		<div
-			className={`relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto p-2 sm:p-4 ${
-				answered ? "opacity-60" : ""
-			}`}
+		<motion.div
+			className="relative w-full max-w-xs sm:max-w-sm md:max-w-md mx-auto p-2 sm:p-4"
 			onKeyDown={handleKeyDown}
 			tabIndex={0}
 			ref={inputRef}
+			variants={containerVariants}
+			initial="initial"
+			animate="animate"
 		>
-			{/* Overlay when answered */}
-			{answered && (
+			{/* Overlay when answered - exclude red flag area */}
+			{showOverlay && (
 				<motion.div
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					className="absolute inset-0 z-20 bg-black/10 rounded-2xl transition-opacity duration-500 pointer-events-none"
+					className="absolute inset-0 z-10 bg-black/20 rounded-2xl pointer-events-none"
+					variants={overlayVariants}
+					initial="hidden"
+					animate="visible"
 				/>
 			)}
 
@@ -250,33 +265,7 @@ export default function IntegratedPinScenario({
 			>
 				{/* Header */}
 				<div className="text-center pt-4 sm:pt-6 md:pt-8 pb-4 sm:pb-6 px-4 sm:px-6 bg-white">
-					{/* Red Flag Pin Icon and Note Card - Show only when answered */}
-					{answered && (
-						<>
-							<motion.div
-								initial={{ scale: 0, rotate: -10, opacity: 0 }}
-								animate={{ scale: 1, rotate: 0, opacity: 1 }}
-								transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-								className="absolute -top-[20%] left-1/2 transform -translate-x-1/2 z-30 mb-4"
-							>
-								<img
-									src="/images/scenarios/question-1/redflag-pin.svg"
-									alt="Red flag pin warning"
-									className="w-64 h-auto transform scale-200 sm:scale-100 md:scale-200"
-								/>
-							</motion.div>
-							<motion.div
-								initial={{ opacity: 0, y: 10 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ delay: 0.4 }}
-								className="absolute -top-[10%] left-0 right-0 z-30 px-4"
-							>
-								<p className="w-full text-sm text-white mb-1 text-center rounded-lg px-3 py-2">
-									*แบบทดสอบนี้ไม่มีการจัดเก็บรหัสผ่านของผู้ใช้
-								</p>
-							</motion.div>
-						</>
-					)}
+					{/* Red Flag and Note are now handled by RedFlagOverlay component */}
 
 					<motion.h3
 						initial={{ scale: 0.9 }}
@@ -339,10 +328,10 @@ export default function IntegratedPinScenario({
 
 			{/* Action Buttons */}
 			<motion.div
-				initial={{ y: 20, opacity: 0 }}
-				animate={{ y: 0, opacity: 1 }}
-				transition={{ delay: 0.1 }}
 				className="flex gap-2 sm:gap-3 mt-4 sm:mt-6"
+				variants={buttonsVariants}
+				initial="initial"
+				animate="animate"
 			>
 				<motion.button
 					whileHover={{ scale: 1.02 }}
@@ -405,6 +394,6 @@ export default function IntegratedPinScenario({
 					animation: blink 1s infinite;
 				}
 			`}</style>
-		</div>
+		</motion.div>
 	);
 }

@@ -14,6 +14,7 @@ import { QuestionSection } from "./question-section";
 import { AnswerPanel } from "./answer-panel";
 import { ResultCard } from "./result-card";
 import { QuizBackground } from "./quiz-background";
+import { RedFlagOverlay } from "@/components/red-flag-overlay";
 
 // Device detection moved to QuizService.getDeviceInfo()
 
@@ -236,6 +237,12 @@ export function QuizClient({
 				onReset={handleReset}
 				isLoading={isTransitioning}
 				isLastQuestion={isLastQuestion}
+			/>
+
+			{/* Red Flag Overlay - Independent from all other opacity effects */}
+			<RedFlagOverlay 
+				show={showResult} 
+				questionOrderIndex={currentQuestion.order_index}
 			/>
 		</div>
 	);
