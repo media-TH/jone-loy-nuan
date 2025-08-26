@@ -316,7 +316,7 @@ export const ResultCard = ({
 									{/* Decorative corner accent */}
 									<div className="absolute top-0 left-0 w-12 h-12 bg-gradient-to-br from-white/20 to-transparent rounded-br-full" />
 
-									<div className="relative z-10">{result.explanation}</div>
+									<div className="relative z-10 text-justify">{result.explanation}</div>
 								</motion.div>
 
 								{/* Security: Hide sensitive data during loading with enhanced styling */}
