@@ -27,7 +27,11 @@ export async function login(formData: FormData) {
 
 	revalidatePath("/", "layout");
 	// Redirect to admin dashboard or the originally requested page
-	redirect(redirectTo || "/admin");
+	// Convert admin paths to hidden paths
+	const finalRedirect = redirectTo?.startsWith('/admin') 
+		? redirectTo.replace('/admin', '/x9k2m7n4p8q1')
+		: redirectTo || "/x9k2m7n4p8q1";
+	redirect(finalRedirect);
 }
 
 export async function logout() {

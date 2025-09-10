@@ -65,8 +65,9 @@ export async function updateSession(request: NextRequest) {
 		// Get user session for authentication check
 		const { data: { user }, error } = await supabase.auth.getUser();
 		
-		// Check if accessing admin routes
-		const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
+		// Check if accessing admin routes (including the hidden path)
+		const isAdminRoute = request.nextUrl.pathname.startsWith('/admin') || 
+							 request.nextUrl.pathname.startsWith('/x9k2m7n4p8q1');
 		
 		if (isAdminRoute) {
 			// If no user or error getting user, redirect to login
@@ -80,7 +81,8 @@ export async function updateSession(request: NextRequest) {
 		console.error("[middleware] updateSession error", error);
 		
 		// If error and accessing admin routes, redirect to login
-		if (request.nextUrl.pathname.startsWith('/admin')) {
+		if (request.nextUrl.pathname.startsWith('/admin') || 
+			request.nextUrl.pathname.startsWith('/x9k2m7n4p8q1')) {
 			const loginUrl = new URL('/login', request.url);
 			loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
 			return NextResponse.redirect(loginUrl);

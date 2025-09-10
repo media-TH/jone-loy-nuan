@@ -34,21 +34,31 @@ app/                    # Next.js App Router pages
 ├── api/               # API routes
 ├── quiz/              # Main quiz flow
 ├── login/             # Authentication
-└── result/            # Quiz results
+├── result/            # Quiz results
+├── survey/            # User survey functionality
+└── error/             # Error handling pages
 
 components/            # Shared React components
 ├── ui/               # shadcn/ui components
-└── [custom components]
+├── admin/            # Admin-specific components
+└── [custom components like content-area, login-form, etc.]
 
 lib/                   # Utilities and business logic
-├── actions/          # Server actions
-├── types.ts          # TypeScript type definitions
+├── actions/          # Server actions for database operations
+├── types/            # Additional type definitions
+├── handlers/         # Business logic handlers
+├── services/         # Service layer components
+├── transforms/       # Data transformation utilities
+├── animations/       # Animation configurations
+├── types.ts          # Main TypeScript type definitions
 ├── schema.ts         # Zod validation schemas
-└── utils.ts          # Utility functions
+├── database.types.ts # Generated Supabase types
+└── constants.ts      # Application constants
 
 store/                 # Zustand state management
 hooks/                 # Custom React hooks
-utils/supabase/        # Supabase client configuration
+utils/                 # General utilities (includes supabase config)
+supabase/              # Supabase configuration and migrations
 ```
 
 ### Key Architecture Patterns
@@ -141,7 +151,7 @@ Quiz questions support four content types in the `QuizContent` interface:
 ### Database Integration
 - Uses Supabase with TypeScript types generated in `database.types.ts`
 - Server actions in `lib/actions/` handle all database mutations
-- Quiz responses saved to `/api/quiz-reponse` endpoint for analytics
+- Quiz responses saved to `/api/quiz-response` endpoint for analytics
 - Real-time features available for admin panel updates
 
 ### Animation System
@@ -158,11 +168,12 @@ Centralized animation configuration through `useQuizAnimations` hook provides:
 
 ### Build and Development Notes
 - Uses TypeScript strict mode with custom ESLint rules
-- Two disabled rules: `react/no-unescaped-entities` and `@next/next/no-page-custom-font`
-- Tailwind CSS v4 with CSS variables for theming
+- Two disabled ESLint rules: `react/no-unescaped-entities` and `@next/next/no-page-custom-font`
+- Tailwind CSS v4 with CSS variables for theming and `tw-animate-css` for additional animations
 - Font loading: Inter (primary) + Prompt (Thai) with display swap optimization
 - Path aliases: `@/*` maps to project root for cleaner imports
 - Development server runs on default port 3000
+- Uses `tsx` for running TypeScript scripts (migration, image upload)
 
 ### Common Development Patterns
 - Server actions for all database mutations (no client-side database calls)
@@ -170,3 +181,5 @@ Centralized animation configuration through `useQuizAnimations` hook provides:
 - TypeScript interfaces defined in `lib/types.ts` for all major data structures
 - Component props extend interfaces for type safety
 - Zustand store with devtools for state debugging
+- Modular component architecture with separation of concerns
+- Use of custom hooks for complex state logic and animations

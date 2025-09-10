@@ -54,19 +54,19 @@ export function AdminHeader({ user: initialUser }: AdminHeaderProps) {
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-between items-center h-16">
 					<div className="flex items-center space-x-8">
-						<Link href="/admin" className="text-xl font-semibold text-gray-900 hover:text-gray-700">
+						<Link href="/x9k2m7n4p8q1" className="text-xl font-semibold text-gray-900 hover:text-gray-700">
 							Quiz Admin Dashboard
 						</Link>
 						
 						<nav className="hidden md:flex space-x-6">
 							<Link 
-								href="/admin" 
+								href="/x9k2m7n4p8q1" 
 								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
 							>
 								Dashboard
 							</Link>
 							<Link 
-								href="/admin/quizzes" 
+								href="/x9k2m7n4p8q1/quizzes" 
 								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
 							>
 								Manage Quizzes
@@ -98,13 +98,13 @@ export function AdminHeader({ user: initialUser }: AdminHeaderProps) {
 								</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem asChild>
-									<Link href="/admin" className="cursor-pointer">
+									<Link href="/x9k2m7n4p8q1" className="cursor-pointer">
 										<BarChart3 className="mr-2 h-4 w-4" />
 										<span>Dashboard</span>
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
-									<Link href="/admin/settings" className="cursor-pointer">
+									<Link href="/x9k2m7n4p8q1/settings" className="cursor-pointer">
 										<Settings className="mr-2 h-4 w-4" />
 										<span>Settings</span>
 									</Link>

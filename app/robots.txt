@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/*
+Allow: /
+
+Sitemap: https://xn--12co4czb5a2kj.online/sitemap.xml

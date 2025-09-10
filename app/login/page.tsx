@@ -13,7 +13,9 @@ export default async function Page({
 	const { data, error } = await supabase.auth.getUser();
 
 	if (!error && data?.user) {
-		const redirectTo = params.redirectTo || "/";
+		const redirectTo = params.redirectTo?.startsWith('/admin') 
+			? params.redirectTo.replace('/admin', '/x9k2m7n4p8q1')
+			: params.redirectTo || "/x9k2m7n4p8q1";
 		redirect(redirectTo);
 	}
 
