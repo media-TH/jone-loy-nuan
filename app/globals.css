@@ -191,6 +191,7 @@ html, body {
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 1.2s ease-in-out;
   }
 }
 

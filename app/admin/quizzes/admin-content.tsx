@@ -25,6 +25,7 @@ import type { QuestionWithAnswers } from "@/lib/types";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Cell Action Component
 const CellAction = ({
@@ -206,13 +207,29 @@ export default function AdminContent() {
 				return (
 					<div className="flex items-center gap-2">
 						<span className="text-sm font-mono">{answerCount} ข้อ</span>
-						{correctAnswers === 1 ? (
-							<span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-								✓
-							</span>
+						{correctAnswers >= 1 ? (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 cursor-help">
+										ถูก {correctAnswers} ข้อ
+									</span>
+								</TooltipTrigger>
+								<TooltipContent sideOffset={6} className="max-w-sm text-left">
+									<div className="text-xs font-medium mb-1">คำตอบที่ถูก</div>
+									<ul className="list-disc pl-4 space-y-0.5">
+										{(Array.isArray(answers) ? answers : [])
+											.filter((a: any) => a.isCorrect || a.is_correct)
+											.map((a: any, idx: number) => (
+												<li key={idx} className="text-xs leading-snug">
+													{a.text || a.answer_text || "(ไม่มีข้อความ)"}
+												</li>
+											))}
+									</ul>
+								</TooltipContent>
+							</Tooltip>
 						) : (
 							<span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-								✗
+								ไม่มีคำตอบถูก
 							</span>
 						)}
 					</div>

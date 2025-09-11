@@ -196,6 +196,7 @@ export default function IntegratedPinScenario({
 	// Handle cancel (Correct answer in quiz context)
 	const handleCancel = () => {
 		if (disabled) return;
+		console.log("[DEBUG] PIN Scenario - handleCancel called, sending onAnswer(true)");
 		setAnswered(true);
 		onAnswer(true);
 	};

@@ -68,9 +68,18 @@ export function QuizClient({
 	}, [currentQuestion]);
 
 	const isCorrect = useMemo(() => {
+		// สำหรับ PIN Scenario (ข้อแรก) ใช้ข้อมูลจาก store
+		if (currentQuestion.order_index === 1) {
+			const { responses } = useQuizResultStore.getState();
+			const currentResponse = responses.find(r => r.questionId === currentQuestion.id);
+			console.log("[DEBUG] PIN Scenario isCorrect from store:", currentResponse?.isCorrect || null);
+			return currentResponse?.isCorrect || null;
+		}
+		
+		// สำหรับข้ออื่นๆ ใช้ selectedAnswer
 		if (!selectedAnswer) return null;
 		return isAnswerCorrect(answers, selectedAnswer);
-	}, [answers, selectedAnswer]);
+	}, [answers, selectedAnswer, currentQuestion, showResult]);
 
 	const isLastQuestion = currentIndex === questions.length - 1;
 
@@ -120,12 +129,14 @@ export function QuizClient({
 	// เพิ่ม handler สำหรับ PinScenario (ข้อแรก)
 	const handlePinScenarioAnswer = (isCorrect: boolean) => {
 		if (showResult) return;
+		console.log("[DEBUG] handlePinScenarioAnswer received:", isCorrect);
 		setShowResult(true);
 		// บันทึก response (ข้อแรกไม่มี answerId)
 		addResponse({
 			questionId: currentQuestion.id,
 			isCorrect,
 		});
+		console.log("[DEBUG] Added response to store:", { questionId: currentQuestion.id, isCorrect });
 	};
 
 	// 🔄 Enhanced reset handler with loading
