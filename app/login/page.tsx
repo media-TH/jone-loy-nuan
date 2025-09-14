@@ -2,10 +2,10 @@ import { LoginForm } from "@/components/login-form";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function Page({ 
-	searchParams 
-}: { 
-	searchParams: Promise<{ redirectTo?: string; error?: string }> 
+export default async function Page({
+	searchParams
+}: {
+	searchParams: Promise<{ redirectTo?: string; error?: string }>
 }) {
 	const params = await searchParams;
 	// ถ้ามี user อยู่แล้วให้เข้า admin หรือหน้าที่ต้องการ
@@ -13,8 +13,8 @@ export default async function Page({
 	const { data, error } = await supabase.auth.getUser();
 
 	if (!error && data?.user) {
-		const redirectTo = params.redirectTo?.startsWith('/admin') 
-			? params.redirectTo.replace('/admin', '/x9k2m7n4p8q1')
+		const redirectTo = params.redirectTo?.startsWith('/(admin)')
+			? params.redirectTo.replace('/(admin)', '/x9k2m7n4p8q1')
 			: params.redirectTo || "/x9k2m7n4p8q1";
 		redirect(redirectTo);
 	}

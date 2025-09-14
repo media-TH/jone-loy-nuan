@@ -32,8 +32,8 @@ export async function uploadQuestionImages(
 		return { error: error.message };
 	}
 
-	revalidatePath(`/admin/quizzes/${questionId}/images`);
-	revalidatePath("/admin");
+	revalidatePath(`/(admin)/quizzes/${questionId}/images`);
+	revalidatePath("/(admin)");
 	return { success: true };
 }
 

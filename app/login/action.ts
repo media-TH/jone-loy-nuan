@@ -22,16 +22,39 @@ export async function login(formData: FormData) {
 	);
 
 	if (error) {
-		redirect("/error");
+		console.error("Login error:", error);
+		// Redirect back to login with error
+		const loginUrl = new URL('/login', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
+		if (redirectTo) {
+			loginUrl.searchParams.set('redirectTo', redirectTo);
+		}
+		loginUrl.searchParams.set('error', 'auth_failed');
+		redirect(loginUrl.toString());
 	}
 
-	revalidatePath("/", "layout");
-	// Redirect to admin dashboard or the originally requested page
-	// Convert admin paths to hidden paths
-	const finalRedirect = redirectTo?.startsWith('/admin') 
-		? redirectTo.replace('/admin', '/x9k2m7n4p8q1')
-		: redirectTo || "/x9k2m7n4p8q1";
-	redirect(finalRedirect);
+	// Ensure session is properly established
+	if (authData.session) {
+		// Force revalidation of all cached data
+		revalidatePath("/", "layout");
+
+		// Small delay to ensure session is fully established
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		// Redirect to admin dashboard or the originally requested page
+		// Convert admin paths to hidden paths
+		const finalRedirect = redirectTo?.startsWith('/(admin)')
+			? redirectTo.replace('/(admin)', '/x9k2m7n4p8q1')
+			: redirectTo || "/x9k2m7n4p8q1";
+		redirect(finalRedirect);
+	} else {
+		// No session created, redirect back to login with error
+		const loginUrl = new URL('/login', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
+		if (redirectTo) {
+			loginUrl.searchParams.set('redirectTo', redirectTo);
+		}
+		loginUrl.searchParams.set('error', 'auth_failed');
+		redirect(loginUrl.toString());
+	}
 }
 
 export async function logout() {
@@ -43,7 +66,12 @@ export async function logout() {
 		console.error("Logout error:", error);
 	}
 
+	// Clear all cached data and force revalidation
 	revalidatePath("/", "layout");
+
+	// Small delay to ensure logout is processed
+	await new Promise(resolve => setTimeout(resolve, 100));
+
 	redirect("/");
 }
 

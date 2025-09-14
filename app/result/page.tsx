@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useQuizResultStore } from "@/store/quiz-store";
 import { RotateCcw, Home } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { getRiskAssessment } from "@/lib/transforms/quiz.transforms";
 
 export default function ResultPage() {
@@ -21,10 +21,8 @@ export default function ResultPage() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	// 🎯 Result design mapping using transform utilities
-	const resultDesign = useMemo(() => {
-		return getRiskAssessment(score, total);
-	}, [score, total]);
+	// 🎯 Result design mapping - React Compiler optimizes automatically
+	const resultDesign = getRiskAssessment(score, total);
 
 	// 🎨 Animation Variants
 	const containerVariants = {

@@ -39,8 +39,8 @@ export async function fetchQuestions(search: string) {
 
 	const filteredData = search
 		? data.filter((q: QuestionRow) =>
-				q.question_text?.toLowerCase().includes(search.toLowerCase())
-		  )
+			q.question_text?.toLowerCase().includes(search.toLowerCase())
+		)
 		: data;
 
 	return (filteredData ?? []).map(toAdminDisplay);
@@ -67,6 +67,7 @@ export async function fetchQuizQuestions() {
 
 // GET single question by id
 export async function fetchQuestionById(id: string) {
+
 	const supabase = await createClient();
 
 	// ใช้ get_questions_with_answers function เพื่อให้ได้ format ข้อมูลที่สม่ำเสมอ
@@ -77,14 +78,18 @@ export async function fetchQuestionById(id: string) {
 		return null;
 	}
 
+	console.log("[fetchQuestionById] Total questions found:", data?.length || 0);
+
 	// หาคำถามที่ต้องการ
 	const question = data?.find((q: any) => q.id === id);
 
 	if (!question) {
-		console.error("Question not found:", id);
+		console.error("[fetchQuestionById] Question not found:", id);
+		console.log("[fetchQuestionById] Available question IDs:", data?.map((q: any) => q.id) || []);
 		return null;
 	}
 
+	console.log("[fetchQuestionById] Question found:", question.question_text?.substring(0, 50) + "...");
 	return question;
 }
 
@@ -172,8 +177,8 @@ export async function upsertQuestion(
 			if (answersError) throw answersError;
 		}
 
-		revalidatePath("/admin");
-		revalidatePath("/admin/quizzes");
+		revalidatePath("/(admin)");
+		revalidatePath("/(admin)/quizzes");
 
 		// Return success instead of redirecting
 		return { success: true };
@@ -197,7 +202,7 @@ export async function deleteQuestionAction(
 		return { success: false, error: error.message };
 	}
 
-	revalidatePath("/admin");
-	revalidatePath("/admin/quizzes");
+	revalidatePath("/(admin)");
+	revalidatePath("/(admin)/quizzes");
 	return { success: true };
 }

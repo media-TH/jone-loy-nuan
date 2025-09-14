@@ -75,8 +75,7 @@ export const ResultCard = ({
 		}
 	};
 
-	const getTitle = () => {
-		console.log("[DEBUG] ResultCard - isCorrect:", isCorrect);
+	const getTitle = () => {		
 		return isCorrect ? result.correctTitle : result.wrongTitle;
 	};
 

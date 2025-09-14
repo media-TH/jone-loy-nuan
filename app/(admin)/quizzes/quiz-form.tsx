@@ -47,7 +47,7 @@ export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 	const formRef = useRef<HTMLFormElement>(null);
 
 	// Simple initial answers parsing
-	const initialAnswers = initialData?.answers ? 
+	const initialAnswers = initialData?.answers ?
 		(Array.isArray(initialData.answers) ? initialData.answers.map((answer: any) => ({
 			id: answer.id || crypto.randomUUID(),
 			text: answer.text || answer.answer_text || "",
@@ -64,7 +64,7 @@ export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 				toast.success("คำถามบันทึกเรียบร้อยแล้ว!");
 				// Refresh และ redirect after successful save
 				router.refresh();
-				router.push("/admin/quizzes");
+				router.push("/x9k2m7n4p8q1/quizzes");
 			}
 		} catch (error) {
 			toast.error("เกิดข้อผิดพลาด: " + (error as Error).message);
@@ -138,7 +138,7 @@ export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 				</Card>
 
 				{/* Answers Management */}
-				<AnswerFields 
+				<AnswerFields
 					initialAnswers={initialAnswers}
 					onChange={setAnswers}
 				/>
@@ -147,9 +147,9 @@ export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 				<Card>
 					<CardContent className="pt-6">
 						<div className="flex justify-end gap-3">
-							<Button 
-								type="button" 
-								variant="outline" 
+							<Button
+								type="button"
+								variant="outline"
 								onClick={() => router.back()}
 							>
 								ยกเลิก

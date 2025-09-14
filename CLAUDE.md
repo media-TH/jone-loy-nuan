@@ -183,3 +183,7 @@ Centralized animation configuration through `useQuizAnimations` hook provides:
 - Zustand store with devtools for state debugging
 - Modular component architecture with separation of concerns
 - Use of custom hooks for complex state logic and animations
+
+### Commit Message
+Owner : Q <siliconwarin@gmail.com>
+Co-Authored-By : Tukta AI Assistant <siliconwarin@gmail.com>

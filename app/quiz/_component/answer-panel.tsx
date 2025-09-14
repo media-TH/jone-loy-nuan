@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useQuizAnimations } from "@/hooks/useQuizAnimations";
 import type {
@@ -8,7 +8,7 @@ import type {
 	AnswerPanelLayout,
 	ButtonVariant,
 } from "@/lib/types";
-import { useMemo } from "react";
+// useMemo removed - React Compiler handles optimization automatically
 
 export const AnswerPanel = (props: AnswerPanelProps) => {
 	const {
@@ -21,54 +21,64 @@ export const AnswerPanel = (props: AnswerPanelProps) => {
 
 	// All hooks are now at the top level, respecting the Rules of Hooks.
 
-	// 🧠 Smart Layout Detection
-	const layoutInfo = useMemo(() => {
-		const answerCount = answers?.length ?? 0;
-		if (hideAnswers || answerCount === 0) {
-			return { layout: "hidden" as const, showPanel: false };
-		}
-
-		const isHorizontal = answerCount === 2;
-		const isVertical = answerCount >= 3;
-
-		return {
-			layout: (isHorizontal ? "horizontal" : "vertical") as AnswerPanelLayout,
-			showPanel: true,
-			isHorizontal,
-			isVertical,
-		};
-	}, [hideAnswers, answers]);
+	// 🧠 Smart Layout Detection - React Compiler optimizes automatically
+	const answerCount = answers?.length ?? 0;
+	const showPanel = !hideAnswers && answerCount > 0;
+	const isHorizontal = answerCount === 2;
+	const isVertical = answerCount >= 3;
+	const layout: AnswerPanelLayout = isHorizontal ? "horizontal" : "vertical";
+	
+	const layoutInfo = {
+		layout: showPanel ? layout : ("hidden" as const),
+		showPanel,
+		isHorizontal,
+		isVertical,
+	};
 
 	// 🎨 Animation Logic
-	const { getAnswerPanelLayoutAnimation, getAnswerButtonLayoutAnimation } =
-		useQuizAnimations(props.showResult);
+	const { getAnswerPanelLayoutAnimation } = useQuizAnimations(props.showResult);
 
-	// 🎨 Layout-specific styles
-	const containerStyles = useMemo(() => {
+	// Parent/child variants with stagger for smoother sequencing
+	const listVariants: Variants = {
+		initial: { opacity: 1 },
+		animate: {
+			opacity: 1,
+			transition: { staggerChildren: 0.08 },
+		},
+	};
+
+	const itemVariants: Variants = {
+		initial: (custom: { index: number; isHorizontal: boolean; y: number }) =>
+			custom.isHorizontal
+				? { opacity: 0, x: custom.index === 0 ? -20 : 20 }
+				: { opacity: 0, y: custom.y },
+		animate: { opacity: 1, x: 0, y: 0 },
+	};
+
+	// 🎨 Layout-specific styles - React Compiler optimizes automatically
+	const getContainerStyles = () => {
 		if (!layoutInfo.showPanel) return "flex-none h-20";
-
+		
 		const baseStyles = "w-full flex justify-center items-center";
 		if (layoutInfo.isHorizontal) {
 			return `${baseStyles} flex-row gap-3 sm:gap-4 md:gap-6`;
 		}
 		return `${baseStyles} flex-col`;
-	}, [layoutInfo]);
+	};
 
-	const answerContainerStyles = useMemo(() => {
+	const getAnswerContainerStyles = () => {
 		if (layoutInfo.isHorizontal) {
 			return "flex flex-row justify-center items-stretch gap-3 sm:gap-4 md:gap-6 w-full";
 		}
 		return "flex flex-col justify-center items-stretch space-y-2.5 sm:space-y-3 md:space-y-4 w-full";
-	}, [layoutInfo.isHorizontal]);
+	};
 
-	const getButtonStyles = useMemo(() => {
-		return "w-full h-auto text-sm sm:text-base py-2.5 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 min-h-[44px] rounded-xl";
-	}, []);
+	const buttonStyles = "w-full h-auto text-sm sm:text-base py-2.5 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 min-h-[44px] rounded-xl";
 
 	// ⭐️ Guard Clause moved after hooks.
 	// Now we conditionally render based on layoutInfo, instead of an early return.
 	if (!answers || !layoutInfo.showPanel) {
-		return <div className={containerStyles} />;
+		return <div className={getContainerStyles()} />;
 	}
 
 	// 🔧 Local helpers are now inside the component body, but after the early return check.
@@ -98,15 +108,19 @@ export const AnswerPanel = (props: AnswerPanelProps) => {
 		selectedAnswer === answerId ? "selected" : "unselected";
 
 	return (
-		<div className={containerStyles}>
+		<div className={getContainerStyles()}>
 			<motion.div
 				{...getAnswerPanelLayoutAnimation(layoutInfo.layout)}
-				className={answerContainerStyles}
+				className={getAnswerContainerStyles()}
+				variants={listVariants}
+				initial="initial"
+				animate="animate"
 			>
 				{answers.map((option, index) => (
 					<div key={option.id} className="w-full flex">
 						<motion.div
-							{...getAnswerButtonLayoutAnimation(index, layoutInfo.layout)}
+							variants={itemVariants}
+							custom={{ index, isHorizontal: layoutInfo.isHorizontal, y: 15 }}
 							className="w-full"
 						>
 							<Button
@@ -115,7 +129,7 @@ export const AnswerPanel = (props: AnswerPanelProps) => {
 								onClick={() => onAnswerSelect(option.id)}
 								disabled={isButtonDisabled(option.id) || showResult}
 								data-state={getButtonDataState(option.id)}
-								className={getButtonStyles}
+								className={buttonStyles}
 							>
 								{option.text}
 							</Button>

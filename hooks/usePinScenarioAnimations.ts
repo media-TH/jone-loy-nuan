@@ -1,104 +1,89 @@
-import { useMemo } from "react";
 import type { Variants } from "framer-motion";
 
 /**
  * Custom hook for PIN scenario animations
- * Handles red flag pin, note, and overlay animations
+ * React Compiler handles optimization automatically - no manual memoization needed
  */
 export function usePinScenarioAnimations(answered: boolean) {
-	const redFlagVariants: Variants = useMemo(
-		() => ({
-			hidden: {
-				scale: 0,
-				rotate: -10,
-				opacity: 0,
+	// Static animation variants - React Compiler optimizes automatically
+	const redFlagVariants: Variants = {
+		hidden: {
+			scale: 0,
+			rotate: -10,
+			opacity: 0,
+		},
+		visible: {
+			scale: 1,
+			rotate: 0,
+			opacity: 1,
+			transition: {
+				delay: 0.2,
+				type: "spring",
+				stiffness: 200,
+				damping: 15,
 			},
-			visible: {
-				scale: 1,
-				rotate: 0,
-				opacity: 1,
-				transition: {
-					delay: 0.2,
-					type: "spring",
-					stiffness: 200,
-					damping: 15,
-				},
-			},
-		}),
-		[]
-	);
+		},
+	};
 
-	const noteVariants: Variants = useMemo(
-		() => ({
-			hidden: {
-				opacity: 0,
-				y: 10,
+	const noteVariants: Variants = {
+		hidden: {
+			opacity: 0,
+			y: 10,
+		},
+		visible: {
+			opacity: 1,
+			y: 0,
+			transition: {
+				delay: 0.4,
+				duration: 0.3,
+				ease: "easeOut",
 			},
-			visible: {
-				opacity: 1,
-				y: 0,
-				transition: {
-					delay: 0.4,
-					duration: 0.3,
-					ease: "easeOut",
-				},
-			},
-		}),
-		[]
-	);
+		},
+	};
 
-	const overlayVariants: Variants = useMemo(
-		() => ({
-			hidden: {
-				opacity: 0,
+	const overlayVariants: Variants = {
+		hidden: {
+			opacity: 0,
+		},
+		visible: {
+			opacity: 0.7,
+			transition: {
+				duration: 0.5,
+				ease: "easeInOut",
 			},
-			visible: {
-				opacity: 0.7,
-				transition: {
-					duration: 0.5,
-					ease: "easeInOut",
-				},
-			},
-		}),
-		[]
-	);
+		},
+	};
 
-	const containerVariants: Variants = useMemo(
-		() => ({
-			initial: {
-				y: 20,
-				opacity: 0,
+	const containerVariants: Variants = {
+		initial: {
+			y: 20,
+			opacity: 0,
+		},
+		animate: {
+			y: 0,
+			opacity: 1,
+			transition: {
+				duration: 0.4,
+				ease: "easeOut",
 			},
-			animate: {
-				y: 0,
-				opacity: 1,
-				transition: {
-					duration: 0.4,
-					ease: "easeOut",
-				},
-			},
-		}),
-		[]
-	);
+		},
+	};
 
-	const buttonsVariants: Variants = useMemo(
-		() => ({
-			initial: {
-				y: 20,
-				opacity: 0,
+	const buttonsVariants: Variants = {
+		initial: {
+			y: 20,
+			opacity: 0,
+		},
+		animate: {
+			y: 0,
+			opacity: 1,
+			transition: {
+				delay: 0.1,
+				duration: 0.4,
+				ease: "easeOut",
 			},
-			animate: {
-				y: 0,
-				opacity: 1,
-				transition: {
-					delay: 0.1,
-					duration: 0.4,
-					ease: "easeOut",
-				},
-			},
-		}),
-		[]
-	);
+		},
+	};
 
 	return {
 		redFlagVariants,

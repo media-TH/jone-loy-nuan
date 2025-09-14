@@ -42,8 +42,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
    /* Shadows */
-   --shadow-card: 0 10px 30px -5px (var(--accent) / 0.1);
-   --shadow-button: 0 4px 15px (var(--accent) / 0.3);
+   --shadow-card: 0 10px 30px -5px rgb(from var(--accent) r g b / 0.1);
+   --shadow-button: 0 4px 15px rgb(from var(--accent) r g b / 0.3);
 }
 
 html, body {
@@ -190,8 +190,9 @@ html, body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
-    transition: background-color 1.2s ease-in-out;
+    @apply text-foreground;
+    /* Force initial background to match landing page to avoid white flash */
+    background-color: #eff6ff; /* tailwind blue-50 */
   }
 }
 

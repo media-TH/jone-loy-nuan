@@ -1,37 +1,57 @@
 "use client";
 
 import { useMemo, useEffect, useState, useCallback } from "react";
+import { DURATION, EASE, SPRING } from "@/lib/animations";
 import type { AnswerPanelLayout } from "@/lib/types";
 
 /**
- * Optimized hook for screen size detection
+ * Optimized breakpoint detection using matchMedia
  */
-function useScreenSize() {
-	const [screenSize, setScreenSize] = useState<{
-		width: number;
-		height: number;
-	}>(() => ({
-		width: 1024,
-		height: 768,
-	}));
+function useBreakpoints() {
+  const [state, setState] = useState({ isMobile: false, isTablet: false, isDesktop: true });
 
-	const handleResize = useCallback(() => {
-		setScreenSize({
-			width: window.innerWidth,
-			height: window.innerHeight,
-		});
-	}, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-	useEffect(() => {
-		if (typeof window === "undefined") return;
+    const mMobile = window.matchMedia("(max-width: 639px)");
+    const mTablet = window.matchMedia("(min-width: 640px) and (max-width: 1023px)");
+    const mDesktop = window.matchMedia("(min-width: 1024px)");
 
-		handleResize();
+    const update = () => {
+      setState({ isMobile: mMobile.matches, isTablet: mTablet.matches, isDesktop: mDesktop.matches });
+    };
 
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, [handleResize]);
+    update();
 
-	return screenSize;
+    const add = (mql: MediaQueryList, handler: () => void) => {
+      try {
+        mql.addEventListener("change", handler);
+      } catch {
+        // @ts-ignore
+        mql.addListener(handler);
+      }
+    };
+    const remove = (mql: MediaQueryList, handler: () => void) => {
+      try {
+        mql.removeEventListener("change", handler);
+      } catch {
+        // @ts-ignore
+        mql.removeListener(handler);
+      }
+    };
+
+    add(mMobile, update);
+    add(mTablet, update);
+    add(mDesktop, update);
+
+    return () => {
+      remove(mMobile, update);
+      remove(mTablet, update);
+      remove(mDesktop, update);
+    };
+  }, []);
+
+  return state;
 }
 
 function getLandingPageAnimation() {
@@ -40,31 +60,31 @@ function getLandingPageAnimation() {
 		container: {
 			initial: { opacity: 0 },
 			animate: { opacity: 1 },
-			transition: { delay: 0.5, duration: 0.4, ease: "easeIn" as const },
+            transition: { delay: 0.5, duration: DURATION.fast * 2, ease: EASE.in },
 		},
 		// Card container
 		card: {
 			initial: { opacity: 0, y: 30, scale: 0.95 },
 			animate: { opacity: 1, y: 0, scale: 1 },
-			transition: { delay: 0.7, duration: 0.5, ease: "easeOut" as const },
+            transition: { delay: 0.7, duration: DURATION.slow - 0.1, ease: EASE.out },
 		},
 		// Title
 		title: {
 			initial: { opacity: 0, y: 20 },
 			animate: { opacity: 1, y: 0 },
-			transition: { delay: 0.9, duration: 0.4 },
+            transition: { delay: 0.9, duration: DURATION.fast * 2 },
 		},
 		// Subtitle
 		subtitle: {
 			initial: { opacity: 0, y: 20 },
 			animate: { opacity: 1, y: 0 },
-			transition: { delay: 1.1, duration: 0.4 },
+            transition: { delay: 1.1, duration: DURATION.fast * 2 },
 		},
 		// CTA Button
 		cta: {
 			initial: { opacity: 0, y: 20 },
 			animate: { opacity: 1, y: 0 },
-			transition: { delay: 1.3, duration: 0.4 },
+            transition: { delay: 1.3, duration: DURATION.fast * 2 },
 			// Interactive states
 			hover: { scale: 1.02 },
 			tap: { scale: 0.98 },
@@ -73,7 +93,7 @@ function getLandingPageAnimation() {
 		footer: {
 			initial: { opacity: 0, y: 20 },
 			animate: { opacity: 1, y: 0 },
-			transition: { delay: 1.5, duration: 0.4 },
+            transition: { delay: 1.5, duration: DURATION.fast * 2 },
 		},
 	};
 }
@@ -82,7 +102,7 @@ function getLandingPageAnimation() {
  * 🎨 Animation Logic - Fixed infinite loop issues
  */
 export const useQuizAnimations = (showResult: boolean) => {
-	const { width, height } = useScreenSize();
+	const { isMobile, isTablet, isDesktop } = useBreakpoints();
 	const [isInitialized, setIsInitialized] = useState(false);
 
 	useEffect(() => {
@@ -95,10 +115,6 @@ export const useQuizAnimations = (showResult: boolean) => {
 
 	// ✅ FIXED: Memoize responsive values with proper dependencies
 	const responsiveValues = useMemo(() => {
-		const isMobile = width < 640;
-		const isTablet = width >= 640 && width < 1024;
-		const isDesktop = width >= 1024;
-
 		return {
 			yMove: isMobile ? -120 : isTablet ? -75 : -75,
 			scaleDown: 0.95,
@@ -111,7 +127,7 @@ export const useQuizAnimations = (showResult: boolean) => {
 			isTablet,
 			isDesktop,
 		};
-	}, [width, height]); // Only depend on primitive values
+	}, [isMobile, isTablet, isDesktop]);
 
 	const getContentMotionProps = useCallback(() => {
 		return {
@@ -123,11 +139,7 @@ export const useQuizAnimations = (showResult: boolean) => {
 						opacity: 1,
 				  }
 				: { y: 0, scale: 1, opacity: 1 },
-			transition: {
-				duration: 1.0,
-				ease: "easeInOut" as const,
-				delay: showResult ? 0.2 : 0,
-			},
+        transition: { duration: DURATION.xslow, ease: EASE.default, delay: showResult ? 0.2 : 0 },
 		};
 	}, [showResult, responsiveValues.yMove, responsiveValues.scaleDown]);
 
@@ -137,11 +149,7 @@ export const useQuizAnimations = (showResult: boolean) => {
 			animate: showResult
 				? { y: responsiveValues.yMove, scale: 1, opacity: 1.0 }
 				: { y: 0, scale: 1, opacity: 1 },
-			transition: {
-				duration: 1.0,
-				ease: "easeInOut" as const,
-				delay: showResult ? 0.2 : 0,
-			},
+        transition: { duration: DURATION.xslow, ease: EASE.default, delay: showResult ? 0.2 : 0 },
 		};
 	}, [showResult, responsiveValues.yMove]);
 
@@ -157,13 +165,7 @@ export const useQuizAnimations = (showResult: boolean) => {
 				scale: 1,
 				y: 0,
 			},
-			transition: {
-				delay: 0.5,
-				duration: 0.6,
-				type: "spring" as const,
-				stiffness: 200,
-				damping: 20,
-			},
+        transition: { delay: 0.5, duration: DURATION.slow, ...SPRING.soft },
 		};
 	}, [responsiveValues.bubbleScale, responsiveValues.bubbleY]);
 
@@ -178,7 +180,7 @@ export const useQuizAnimations = (showResult: boolean) => {
 							scale: responsiveValues.scaleDown,
 					  }
 					: { opacity: 1, y: 0, scale: 1 },
-				transition: { duration: 0.6, ease: "easeInOut" as const },
+        transition: { duration: DURATION.slow, ease: EASE.default },
 			};
 
 			if (layout === "horizontal") {
@@ -201,14 +203,14 @@ export const useQuizAnimations = (showResult: boolean) => {
 				return {
 					initial: { opacity: 0, x: index === 0 ? -20 : 20 },
 					animate: { opacity: 1, x: 0 },
-					transition: { delay: index * 0.1, duration: 0.3 },
+        transition: { delay: index * 0.1, duration: DURATION.fast + 0.1 },
 				};
 			}
 
 			return {
 				initial: { opacity: 0, y: responsiveValues.buttonY },
 				animate: { opacity: 1, y: 0 },
-				transition: { delay: index * 0.1, duration: 0.3 },
+        transition: { delay: index * 0.1, duration: DURATION.fast + 0.1 },
 			};
 		},
 		[responsiveValues.buttonY]
@@ -222,11 +224,7 @@ export const useQuizAnimations = (showResult: boolean) => {
 				opacity: 0,
 				y: responsiveValues.questionExitY,
 			},
-			transition: {
-				duration: 0.4,
-				ease: "easeInOut" as const,
-				delay: isInitialized ? 0.2 : 0,
-			},
+        transition: { duration: DURATION.fast * 2, ease: EASE.default, delay: isInitialized ? 0.2 : 0 },
 		};
 	}, [responsiveValues.questionExitY, isInitialized]);
 
@@ -248,10 +246,7 @@ export const useQuizAnimations = (showResult: boolean) => {
 				animate: {
 					background: getBackgroundGradient(),
 				},
-				transition: {
-					duration: 1.2,
-					ease: "easeInOut" as const,
-				},
+        transition: { duration: 1.2, ease: EASE.default },
 			};
 		},
 		[showResult]
@@ -263,32 +258,28 @@ export const useQuizAnimations = (showResult: boolean) => {
 				initial: { opacity: 0 },
 				animate: { opacity: 1 },
 				exit: { opacity: 0 },
-				transition: { duration: 0.3 },
+            transition: { duration: DURATION.fast + 0.1 },
 			},
 			card: {
 				initial: { y: "100%", opacity: 0 },
 				animate: { y: 0, opacity: 1 },
 				exit: { y: "100%", opacity: 0 },
-				transition: {
-					type: "spring" as const,
-					damping: 25,
-					stiffness: 300,
-				},
+            transition: { ...SPRING.firm },
 			},
 			title: {
 				initial: { opacity: 0, y: 20 },
 				animate: { opacity: 1, y: 0 },
-				transition: { delay: 0.2, duration: 0.4 },
+            transition: { delay: 0.2, duration: DURATION.fast * 2 },
 			},
 			content: {
 				initial: { opacity: 0, y: 20 },
 				animate: { opacity: 1, y: 0 },
-				transition: { delay: 0.3, duration: 0.4 },
+            transition: { delay: 0.3, duration: DURATION.fast * 2 },
 			},
 			button: {
 				initial: { opacity: 0, y: 20 },
 				animate: { opacity: 1, y: 0 },
-				transition: { delay: 0.4, duration: 0.4 },
+            transition: { delay: 0.4, duration: DURATION.fast * 2 },
 			},
 		};
 	};

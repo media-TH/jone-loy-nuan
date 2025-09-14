@@ -282,7 +282,7 @@ export default function AdminContent() {
 						รีเฟรช
 					</Button>
 					<Button asChild>
-						<Link href="/admin/quizzes/new">เพิ่มคำถาม</Link>
+						<Link href="/x9k2m7n4p8q1/quizzes/new">เพิ่มคำถาม</Link>
 					</Button>
 				</div>
 			</div>

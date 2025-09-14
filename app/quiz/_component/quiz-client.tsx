@@ -1,182 +1,46 @@
 "use client";
 
-import { ContentArea } from "@/components/content-area";
-import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import type { Answer, QuizResult, QuestionWithAnswers } from "@/lib/types";
-import { useQuizResultStore } from "@/store/quiz-store";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { QuizService } from "@/lib/services/quiz.service";
-import { transformDbAnswers, isAnswerCorrect } from "@/lib/transforms/quiz.transforms";
+import type { QuizResult, QuestionWithAnswers } from "@/lib/types";
+
+// Custom Hooks
+import { useQuizSession } from "@/hooks/useQuizSession";
+import { useQuizNavigation } from "@/hooks/useQuizNavigation";
+import { useQuizAnswers } from "@/hooks/useQuizAnswers";
 
 // Components
+import { ContentArea } from "@/components/content-area";
 import { QuestionSection } from "./question-section";
 import { AnswerPanel } from "./answer-panel";
 import { ResultCard } from "./result-card";
 import { QuizBackground } from "./quiz-background";
 import { RedFlagOverlay } from "@/components/red-flag-overlay";
 
-// Device detection moved to QuizService.getDeviceInfo()
-
 export function QuizClient({
 	initialQuestions,
 }: {
 	initialQuestions: QuestionWithAnswers[];
 }) {
-	const router = useRouter();
-
-	// Zustand store hooks with error handling
-	const startQuiz = useQuizResultStore((state) => state.startQuiz);
-	const addResponse = useQuizResultStore((state) => state.addResponse);
-
-	// --- New State Management ---
 	const [questions] = useState(initialQuestions);
-	const [currentIndex, setCurrentIndex] = useState(0);
-	const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-	const [showResult, setShowResult] = useState(false);
-	const [isTransitioning, setIsTransitioning] = useState(false);
-	const [isQuizReady, setIsQuizReady] = useState(false);
-
-	// Start quiz session on component mount with error handling
-	useEffect(() => {
-		try {
-			startQuiz(initialQuestions.length);
-
-			// รอให้ transition จบก่อนแสดง quiz content
-			const timer = setTimeout(() => {
-				setIsQuizReady(true);
-			}, 100);
-
-			return () => clearTimeout(timer);
-		} catch (error) {
-			console.error("Error starting quiz:", error);
-			// Fallback: set quiz ready even if store fails
-			setIsQuizReady(true);
-		}
-	}, [startQuiz, initialQuestions.length]);
-
-	const currentQuestion = useMemo(() => {
-		return questions[currentIndex];
-	}, [questions, currentIndex]);
-
-	// ✨ Transform answers from DB to match frontend type using utilities
-	const answers = useMemo((): Answer[] => {
-		if (!currentQuestion?.answers || !Array.isArray(currentQuestion.answers)) {
-			return [];
-		}
-		return transformDbAnswers(currentQuestion.answers as any[]);
-	}, [currentQuestion]);
-
-	const isCorrect = useMemo(() => {
-		// สำหรับ PIN Scenario (ข้อแรก) ใช้ข้อมูลจาก store
-		if (currentQuestion.order_index === 1) {
-			const { responses } = useQuizResultStore.getState();
-			const currentResponse = responses.find(r => r.questionId === currentQuestion.id);
-			console.log("[DEBUG] PIN Scenario isCorrect from store:", currentResponse?.isCorrect || null);
-			return currentResponse?.isCorrect || null;
-		}
-		
-		// สำหรับข้ออื่นๆ ใช้ selectedAnswer
-		if (!selectedAnswer) return null;
-		return isAnswerCorrect(answers, selectedAnswer);
-	}, [answers, selectedAnswer, currentQuestion, showResult]);
-
-	const isLastQuestion = currentIndex === questions.length - 1;
-
-	const handleAnswerSelect = (answerId: string) => {
-		if (showResult) return;
-		setSelectedAnswer(answerId);
-		setShowResult(true);
-
-		// Also, add the response to our global store
-		const answer = answers.find((a) => a.id === answerId);
-		addResponse({
-			questionId: currentQuestion.id,
-			isCorrect: answer?.isCorrect || false,
-		});
-	};
-
-	const goToNextQuestion = async () => {
-		setShowResult(false);
-		setSelectedAnswer(null);
-
-		if (!isLastQuestion) {
-			setCurrentIndex((prevIndex) => prevIndex + 1);
-		} else {
-			// Complete quiz: save summary via QuizService then navigate to survey
-			try {
-				const { sessionId, responses, totalQuestions } =
-					useQuizResultStore.getState();
-				const correctAnswers = responses.filter((r) => r.isCorrect).length;
-				const deviceInfo = QuizService.getDeviceInfo();
-
-				if (sessionId) {
-					await QuizService.submitQuizResponse({
-						session_id: sessionId,
-						total_questions: totalQuestions,
-						correct_answers: correctAnswers,
-						device_type: deviceInfo.type,
-						user_agent: deviceInfo.userAgent,
-					});
-				}
-			} catch (err) {
-				console.error("Failed to save quiz summary:", err);
-			}
-			router.push("/survey");
-		}
-	};
-
-	// เพิ่ม handler สำหรับ PinScenario (ข้อแรก)
-	const handlePinScenarioAnswer = (isCorrect: boolean) => {
-		if (showResult) return;
-		console.log("[DEBUG] handlePinScenarioAnswer received:", isCorrect);
-		setShowResult(true);
-		// บันทึก response (ข้อแรกไม่มี answerId)
-		addResponse({
-			questionId: currentQuestion.id,
-			isCorrect,
-		});
-		console.log("[DEBUG] Added response to store:", { questionId: currentQuestion.id, isCorrect });
-	};
-
-	// 🔄 Enhanced reset handler with loading
-	const handleReset = () => {
-		// ถ้าเป็นข้อสุดท้าย ให้ไป survey ทันทีเพื่อไม่โชว์ข้อซ้ำ
-		if (isLastQuestion) {
-			(async () => {
-				try {
-					const { sessionId, responses, totalQuestions } =
-						useQuizResultStore.getState();
-					const correctAnswers = responses.filter((r) => r.isCorrect).length;
-					const deviceInfo = QuizService.getDeviceInfo();
-
-					if (sessionId) {
-						await QuizService.submitQuizResponse({
-							session_id: sessionId,
-							total_questions: totalQuestions,
-							correct_answers: correctAnswers,
-							device_type: deviceInfo.type,
-							user_agent: deviceInfo.userAgent,
-						});
-					}
-				} catch (err) {
-					console.error("Failed to save quiz summary:", err);
-				}
-				router.push("/survey");
-			})();
-			return;
-		}
-
-		// กรณีไม่ใช่ข้อสุดท้าย รอ transition แล้วไปข้อถัดไป
-		setIsTransitioning(true);
-		setTimeout(() => {
-			goToNextQuestion();
-			setIsTransitioning(false);
-		}, 2000);
-	};
+	
+	// Custom hooks for separated concerns
+	const quizSession = useQuizSession(questions);
+	const quizNavigation = useQuizNavigation({
+		currentIndex: quizSession.currentIndex,
+		isLastQuestion: quizSession.isLastQuestion,
+		setCurrentIndex: quizSession.setCurrentIndex,
+		setIsTransitioning: quizSession.setIsTransitioning,
+		resetQuestionState: quizSession.resetQuestionState,
+	});
+	const { answers, isCorrect } = useQuizAnswers({
+		currentQuestion: quizSession.currentQuestion,
+		selectedAnswer: quizSession.selectedAnswer,
+		showResult: quizSession.showResult,
+	});
 
 	// Loading state ถ้ายังไม่มี currentQuestion หรือยังไม่พร้อม
-	if (!currentQuestion || !isQuizReady) {
+	if (!quizSession.currentQuestion || !quizSession.isQuizReady) {
 		return (
 			<div className="h-[100dvh] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
 				<div className="text-center">
@@ -190,12 +54,12 @@ export function QuizClient({
 	return (
 		<div className="relative h-[100dvh] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-hidden">
 			{/* Quiz Background */}
-			<QuizBackground showResult={showResult}>
+			<QuizBackground showResult={quizSession.showResult}>
 				<motion.div
 					className="h-[100dvh] relative flex flex-col p-4 md:p-8"
 					animate={{
-						scale: showResult ? 0.95 : 1,
-						opacity: showResult ? 0.7 : 1,
+						scale: quizSession.showResult ? 0.95 : 1,
+						opacity: quizSession.showResult ? 0.7 : 1,
 					}}
 					transition={{ duration: 1.2, ease: "easeInOut" }}
 				>
@@ -205,8 +69,8 @@ export function QuizClient({
 						<div className="flex justify-end items-end basis-[15%] sm:basis-[18%] md:basis-[20%] pt-2 sm:pt-4 md:pt-5 pb-2 sm:pb-3 md:pb-4">
 							<div className="w-full max-w-[95%] sm:max-w-md md:max-w-lg mx-auto">
 								<QuestionSection
-									question={currentQuestion?.question_text ?? ""}
-									showResult={showResult}
+									question={quizSession.currentQuestion?.question_text ?? ""}
+									showResult={quizSession.showResult}
 								/>
 							</div>
 						</div>
@@ -214,13 +78,13 @@ export function QuizClient({
 						{/* Content Area */}
 						<div className="basis-[60%] sm:basis-[57%] md:basis-[55%] flex items-center justify-center py-2 sm:py-4">
 							<ContentArea
-								questionData={currentQuestion}
-								showResult={showResult}
+								questionData={quizSession.currentQuestion}
+								showResult={quizSession.showResult}
 								variant="fullscreen"
 								// ส่ง onPinScenarioAnswer เฉพาะข้อแรก
 								onPinScenarioAnswer={
-									currentQuestion.order_index === 1
-										? handlePinScenarioAnswer
+									quizSession.currentQuestion.order_index === 1
+										? quizSession.handlePinScenarioAnswer
 										: undefined
 								}
 							/>
@@ -229,13 +93,13 @@ export function QuizClient({
 						{/* Answer Panel */}
 						<div className="basis-[25%] pb-4 sm:pb-6 md:pb-8">
 							{/* ข้อแรกไม่ต้องแสดง AnswerPanel */}
-							{currentQuestion.order_index !== 1 && (
+							{quizSession.currentQuestion.order_index !== 1 && (
 								<div className="w-full max-w-[95%] sm:max-w-md md:max-w-lg mx-auto">
 									<AnswerPanel
 										answers={answers}
-										selectedAnswer={selectedAnswer}
-										showResult={showResult}
-										onAnswerSelect={handleAnswerSelect}
+										selectedAnswer={quizSession.selectedAnswer}
+										showResult={quizSession.showResult}
+										onAnswerSelect={quizSession.handleAnswerSelect}
 									/>
 								</div>
 							)}
@@ -246,18 +110,18 @@ export function QuizClient({
 
 			{/* Result Card - ตอนนี้จะติดขอบล่าง */}
 			<ResultCard
-				showResult={showResult}
+				showResult={quizSession.showResult}
 				isCorrect={isCorrect}
-				result={currentQuestion.result as unknown as QuizResult}
-				onReset={handleReset}
-				isLoading={isTransitioning}
-				isLastQuestion={isLastQuestion}
+				result={quizSession.currentQuestion.result as unknown as QuizResult}
+				onReset={quizNavigation.handleReset}
+				isLoading={quizSession.isTransitioning}
+				isLastQuestion={quizSession.isLastQuestion}
 			/>
 
 			{/* Red Flag Overlay - Independent from all other opacity effects */}
 			<RedFlagOverlay 
-				show={showResult} 
-				questionOrderIndex={currentQuestion.order_index}
+				show={quizSession.showResult} 
+				questionOrderIndex={quizSession.currentQuestion.order_index}
 			/>
 		</div>
 	);

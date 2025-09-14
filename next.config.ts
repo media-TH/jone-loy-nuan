@@ -8,18 +8,18 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
   async rewrites() {
     return [
-      // Hide admin routes behind a random string path
+      // Hide admin routes behind a random string path using group routing
       {
         source: '/x9k2m7n4p8q1/:path*',
-        destination: '/admin/:path*',
+        destination: '/(admin)/:path*',
       },
     ];
   },
   async redirects() {
     return [
-      // Redirect direct admin access to home
+      // Redirect direct admin access to home (group routes are not accessible directly)
       {
-        source: '/admin/:path*',
+        source: '/(admin)/:path*',
         destination: '/',
         permanent: false,
       },
