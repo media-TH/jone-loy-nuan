@@ -172,8 +172,8 @@ export async function upsertQuestion(
 			if (answersError) throw answersError;
 		}
 
-		revalidatePath("/admin");
-		revalidatePath("/admin/quizzes");
+		revalidatePath("/mgmt-portal");
+		revalidatePath("/mgmt-portal/quizzes");
 
 		// Return success instead of redirecting
 		return { success: true };
@@ -197,7 +197,7 @@ export async function deleteQuestionAction(
 		return { success: false, error: error.message };
 	}
 
-	revalidatePath("/admin");
-	revalidatePath("/admin/quizzes");
+	revalidatePath("/mgmt-portal");
+	revalidatePath("/mgmt-portal/quizzes");
 	return { success: true };
 }

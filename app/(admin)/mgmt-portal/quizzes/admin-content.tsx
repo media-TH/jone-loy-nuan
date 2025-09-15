@@ -67,10 +67,10 @@ const CellAction = ({
 					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<Link href={`/admin/quizzes/${questionId}/edit`}>แก้ไขคำถาม</Link>
+					<Link href={`/mgmt-portal/quizzes/${questionId}/edit`}>แก้ไขคำถาม</Link>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
-					<Link href={`/admin/quizzes/${questionId}/images`}>จัดการรูปภาพ</Link>
+					<Link href={`/mgmt-portal/quizzes/${questionId}/images`}>จัดการรูปภาพ</Link>
 				</DropdownMenuItem>
 				<DropdownMenuItem
 					onSelect={handleDelete}
@@ -138,7 +138,7 @@ export default function AdminContent() {
 		e.preventDefault();
 		const formData = new FormData(e.currentTarget);
 		const searchQuery = formData.get("query") as string;
-		router.push(`/admin/quizzes?query=${searchQuery}`);
+		router.push(`/mgmt-portal/quizzes?query=${searchQuery}`);
 	};
 
 	// Handle refresh
@@ -265,7 +265,7 @@ export default function AdminContent() {
 						รีเฟรช
 					</Button>
 					<Button asChild>
-						<Link href="/admin/quizzes/new">เพิ่มคำถาม</Link>
+						<Link href="/mgmt-portal/quizzes/new">เพิ่มคำถาม</Link>
 					</Button>
 				</div>
 			</div>

@@ -124,4 +124,119 @@ export interface InteractiveAdScenarioProps {
 export type QuestionWithAnswers =
 	Database["public"]["Functions"]["get_questions_with_answers"]["Returns"][number];
 
+// --- Campaign Tracking Types ---
+
+// Campaign Traffic Interface
+export interface TrafficSource {
+	id: string;
+	platform: 'facebook' | 'instagram' | 'twitter' | 'line';
+	campaignId?: string;
+	utmSource?: string;
+	utmMedium?: string;
+	utmCampaign?: string;
+	createdAt: Date;
+}
+
+// Quiz Session Interface for Campaign Tracking
+export interface QuizSession {
+	id: string;
+	sessionId: string;
+	trafficSourceId?: string;
+	anonymousUserId?: string;
+
+	totalQuestions: number;
+	completedQuestions: number;
+	correctAnswers: number;
+	isCompleted: boolean;
+	completionTimeMs?: number;
+
+	// KPI Scores (0.0 to 1.0)
+	scamRecognitionScore?: number;
+	riskAssessmentScore?: number;
+	protectiveActionsScore?: number;
+	responseStrategiesScore?: number;
+
+	createdAt: Date;
+	expiresAt: Date;
+}
+
+// KPI Target Interface
+export interface KPITarget {
+	id: string;
+	kpiCategory: 'SCAM_RECOGNITION' | 'RISK_ASSESSMENT' | 'PROTECTIVE_ACTIONS' | 'RESPONSE_STRATEGIES';
+	targetPercentage: number; // 0.80 for 80%
+	totalQuestions: number;
+	description?: string;
+	isActive: boolean;
+	currentSuccessRate?: number;
+	isTargetMet?: boolean;
+	createdAt: Date;
+}
+
+// KPI Target Status for Dashboard
+export interface KPITargetStatus {
+	category: string;
+	currentRate: number;
+	targetRate: number;
+	isTargetMet: boolean;
+	totalResponses: number;
+	improvement?: number; // vs previous period
+}
+
+// Traffic Performance Metrics
+export interface TrafficPerformance {
+	platform: string;
+	totalClicks: number;
+	completedQuizzes: number;
+	completionRate: number;
+	avgKPIScore: number;
+}
+
+// Executive Dashboard Interface
+export interface ExecutiveDashboard {
+	totalCompletedSessions: number;
+	totalStartedSessions: number;
+	completionRate: number;
+
+	kpiTargetStatus: {
+		scamRecognition: KPITargetStatus;
+		riskAssessment: KPITargetStatus;
+		protectiveActions: KPITargetStatus;
+		responseStrategies: KPITargetStatus;
+	};
+
+	trafficSourcePerformance: TrafficPerformance[];
+	overallCampaignScore: number; // 0-100
+}
+
+// Question Response for Campaign Analytics
+export interface QuestionResponse {
+	id: string;
+	quizSessionId: string;
+	questionId: string;
+	selectedAnswerId: string;
+	isCorrect: boolean;
+	responseTimeMs?: number;
+	kpiCategory: string;
+	questionOrder: number;
+	createdAt: Date;
+}
+
+// Survey Response Interface
+export interface SurveyResponse {
+	id: string;
+	quizSessionId: string;
+	ageRange?: string;
+	educationLevel?: string;
+	occupationType?: string;
+	contentHelpfulness?: number; // 1-5
+	difficultyRating?: number; // 1-5
+	additionalFeedback?: string;
+	createdAt: Date;
+}
+
+// Campaign Analytics Types
+export type KPICategory = 'SCAM_RECOGNITION' | 'RISK_ASSESSMENT' | 'PROTECTIVE_ACTIONS' | 'RESPONSE_STRATEGIES';
+export type SocialMediaPlatform = 'facebook' | 'instagram' | 'twitter' | 'line';
+
 // --- Database & API Related Types ---

@@ -32,8 +32,8 @@ export async function uploadQuestionImages(
 		return { error: error.message };
 	}
 
-	revalidatePath(`/admin/quizzes/${questionId}/images`);
-	revalidatePath("/admin");
+	revalidatePath(`/mgmt-portal/quizzes/${questionId}/images`);
+	revalidatePath("/mgmt-portal");
 	return { success: true };
 }
 

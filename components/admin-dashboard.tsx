@@ -140,7 +140,7 @@ export function AdminDashboard() {
 						รีเฟรช
 					</Button>
 					<Button asChild>
-						<Link href="/admin/quizzes/new">
+						<Link href="/mgmt-portal/quizzes/new">
 							<Plus className="mr-2 h-4 w-4" />
 							เพิ่มคำถามใหม่
 						</Link>
@@ -211,13 +211,13 @@ export function AdminDashboard() {
 					</CardHeader>
 					<CardContent className="space-y-3">
 						<Button asChild className="w-full justify-start">
-							<Link href="/admin/quizzes">
+							<Link href="/mgmt-portal/quizzes">
 								<BookOpen className="mr-2 h-4 w-4" />
 								จัดการคำถาม Quiz
 							</Link>
 						</Button>
 						<Button asChild variant="outline" className="w-full justify-start">
-							<Link href="/admin/quizzes/new">
+							<Link href="/mgmt-portal/quizzes/new">
 								<Plus className="mr-2 h-4 w-4" />
 								เพิ่มคำถามใหม่
 							</Link>
@@ -289,7 +289,7 @@ export function AdminDashboard() {
 										</div>
 									</div>
 									<Button asChild size="sm" variant="outline">
-										<Link href={`/admin/quizzes/${question.id}/edit`}>
+										<Link href={`/mgmt-portal/quizzes/${question.id}/edit`}>
 											แก้ไข
 										</Link>
 									</Button>
@@ -301,7 +301,7 @@ export function AdminDashboard() {
 							<BookOpen className="mx-auto h-12 w-12 text-gray-300" />
 							<p className="mt-2">ยังไม่มีคำถามในระบบ</p>
 							<Button asChild className="mt-4">
-								<Link href="/admin/quizzes/new">สร้างคำถามแรก</Link>
+								<Link href="/mgmt-portal/quizzes/new">สร้างคำถามแรก</Link>
 							</Button>
 						</div>
 					)}

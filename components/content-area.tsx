@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import PinScenario from "@/app/quiz/_component/pin-scenario";
+import PinScenario from "@/app/(main)/quiz/_component/pin-scenario";
 import { useQuizAnimations } from "@/hooks/useQuizAnimations";
 import type { QuestionWithAnswers } from "@/lib/types";
 

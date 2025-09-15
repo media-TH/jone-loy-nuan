@@ -64,7 +64,7 @@ export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 				toast.success("คำถามบันทึกเรียบร้อยแล้ว!");
 				// Refresh และ redirect after successful save
 				router.refresh();
-				router.push("/admin/quizzes");
+				router.push("/mgmt-portal/quizzes");
 			}
 		} catch (error) {
 			toast.error("เกิดข้อผิดพลาด: " + (error as Error).message);

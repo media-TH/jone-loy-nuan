@@ -27,7 +27,7 @@ export async function login(formData: FormData) {
 
 	revalidatePath("/", "layout");
 	// Redirect to admin dashboard or the originally requested page
-	redirect(redirectTo || "/admin");
+	redirect(redirectTo || "/mgmt-portal");
 }
 
 export async function logout() {
