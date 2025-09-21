@@ -1,0 +1,122 @@
+%% Mermaid ERD for Supabase public schema
+%% Render with VS Code Mermaid extension or https://mermaid.live
+
+erDiagram
+    questions {
+        uuid id PK
+        int4 order_index
+        text question_text
+        text category
+        jsonb content
+        jsonb result
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    answers {
+        uuid id PK
+        uuid question_id FK
+        text answer_text
+        bool is_correct
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    red_flags {
+        uuid id PK
+        uuid question_id FK NULL
+        text flag_text
+        timestamptz created_at
+    }
+
+    scenario_images {
+        uuid id PK
+        uuid question_id FK
+        text variant "CHECK in ('normal','result')"
+        text image_url
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    quiz_sessions {
+        uuid id PK
+        varchar session_id UNIQUE
+        varchar anonymous_user_id NULL
+        int4 total_questions DEFAULT 10
+        int4 completed_questions DEFAULT 0
+        int4 correct_answers DEFAULT 0
+        bool is_completed DEFAULT false
+        int4 completion_time_ms NULL
+        timestamptz created_at DEFAULT now()
+        timestamptz expires_at DEFAULT now()+interval '45 days'
+        numeric total_summary_score DEFAULT 0
+        int8 tmp_old_fake_id NULL
+    }
+
+    question_responses {
+        uuid id PK
+        uuid quiz_session_id FK NULL
+        uuid question_id FK NULL
+        uuid selected_answer_id FK NULL
+        bool is_correct
+        int4 response_time_ms NULL
+        varchar kpi_category
+        int4 question_order NULL
+        timestamptz created_at DEFAULT now()
+        text device_type NULL
+        text user_agent NULL
+    }
+
+    survey_responses {
+        uuid id PK
+        timestamptz created_at DEFAULT now()
+        int4 total_score
+        int4 total_questions
+        text age_group
+        text education
+        text occupation
+        uuid quiz_session_id FK NULL
+    }
+
+    kpi_target {
+        int8 id PK "IDENTITY ALWAYS"
+        text name
+        text description NULL
+        numeric target_value NULL
+        text unit NULL
+        timestamptz period_start NULL
+        timestamptz period_end NULL
+        uuid quiz_session_id FK NULL
+        timestamptz created_at DEFAULT now()
+        timestamptz updated_at DEFAULT now()
+    }
+
+    quiz_responses {
+        uuid id PK
+        timestamptz created_at DEFAULT now()
+        text session_id
+        int4 total_questions
+        int4 correct_answers
+        text device_type NULL
+        text user_agent NULL
+        uuid quiz_session_id NULL
+    }
+
+    _quiz_session_map {
+        uuid fake_id PK DEFAULT uuid_generate_v4()
+        text session_id
+        text user_agent NULL
+        timestamptz created_at DEFAULT now()
+    }
+
+    %% Relationships
+    questions ||--o{ answers : "question_id"
+    questions ||--o{ red_flags : "question_id"
+    questions ||--o{ scenario_images : "question_id"
+    questions ||--o{ question_responses : "question_id"
+
+    answers ||--o{ question_responses : "selected_answer_id"
+
+    quiz_sessions ||--o{ question_responses : "quiz_session_id"
+    quiz_sessions ||--o{ survey_responses : "quiz_session_id"
+    quiz_sessions ||--o{ kpi_target : "quiz_session_id"
