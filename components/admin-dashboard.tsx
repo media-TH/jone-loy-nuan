@@ -234,13 +234,17 @@ export function AdminDashboard() {
 						<CardDescription>ติดตามผลการใช้งานและประสิทธิภาพ</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-3">
-						<Button variant="outline" className="w-full justify-start" disabled>
-							<BarChart3 className="mr-2 h-4 w-4" />
-							ดูสถิติการใช้งาน (Coming Soon)
+						<Button asChild className="w-full justify-start">
+							<Link href="/mgmt-portal/analytics">
+								<BarChart3 className="mr-2 h-4 w-4" />
+								ดูสถิติการใช้งาน Analytics
+							</Link>
 						</Button>
-						<Button variant="outline" className="w-full justify-start" disabled>
-							<FileText className="mr-2 h-4 w-4" />
-							รายงานผลการเรียนรู้ (Coming Soon)
+						<Button asChild variant="outline" className="w-full justify-start">
+							<Link href="/mgmt-portal/analytics">
+								<FileText className="mr-2 h-4 w-4" />
+								รายงานผลการเรียนรู้
+							</Link>
 						</Button>
 					</CardContent>
 				</Card>

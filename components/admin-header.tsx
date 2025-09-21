@@ -59,14 +59,20 @@ export function AdminHeader({ user: initialUser }: AdminHeaderProps) {
 						</Link>
 						
 						<nav className="hidden md:flex space-x-6">
-							<Link 
-								href="/mgmt-portal" 
+							<Link
+								href="/mgmt-portal"
 								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
 							>
 								Dashboard
 							</Link>
-							<Link 
-								href="/mgmt-portal/quizzes" 
+							<Link
+								href="/mgmt-portal/analytics"
+								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+							>
+								Analytics
+							</Link>
+							<Link
+								href="/mgmt-portal/quizzes"
 								className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
 							>
 								Manage Quizzes
