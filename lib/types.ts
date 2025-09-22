@@ -121,8 +121,18 @@ export interface InteractiveAdScenarioProps {
 	showResult?: boolean;
 }
 
-export type QuestionWithAnswers =
-	Database["public"]["Functions"]["get_questions_with_answers"]["Returns"][number];
+export interface QuestionWithAnswers {
+	id: string;
+	order_index: number;
+	question_text: string;
+	category?: string;
+	content?: any;
+	result?: any;
+	kpi_category?: string;
+	created_at: string;
+	updated_at: string;
+	answers?: Answer[];
+}
 
 // --- Campaign Tracking Types ---
 

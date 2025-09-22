@@ -18,11 +18,42 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { upsertQuestion } from "@/lib/actions/questions";
 import { QuestionWithAnswers } from "@/lib/types";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { AnswerFields } from "@/components/admin/answer-fields";
 
 interface QuizUpsertFormProps {
 	initialData?: Partial<QuestionWithAnswers> | null;
 }
+
+// KPI Categories for the quiz form
+const KPI_CATEGORIES = [
+	{
+		value: "SCAM_RECOGNITION",
+		label: "การรู้จำกลโกง (Scam Recognition)",
+		description: "ความสามารถในการระบุและรู้จำรูปแบบการหลอกลวง"
+	},
+	{
+		value: "RISK_ASSESSMENT",
+		label: "การประเมินความเสี่ยง (Risk Assessment)",
+		description: "ความสามารถในการวิเคราะห์และประเมินความเสี่ยง"
+	},
+	{
+		value: "PROTECTIVE_ACTIONS",
+		label: "การป้องกัน (Protective Actions)",
+		description: "ความรู้ในการป้องกันและปกป้องตัวเอง"
+	},
+	{
+		value: "RESPONSE_STRATEGIES",
+		label: "กลยุทธ์การตอบสนอง (Response Strategies)",
+		description: "วิธีการตอบสนองที่เหมาะสมเมื่อเจอกลโกง"
+	}
+];
 
 // Submit Button Component with useFormStatus
 function SubmitButton({ initialData }: { initialData?: any }) {
@@ -104,10 +135,32 @@ export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 								rows={3}
 								required
 							/>
+						{/* KPI Category */}
+						<div className="space-y-2">
+							<Label htmlFor="kpi_category">
+								หมวดหมู่ KPI <span className="text-red-500">*</span>
+							</Label>
+							<Select name="kpi_category" defaultValue={initialData?.kpi_category || ""} required>
+								<SelectTrigger>
+									<SelectValue placeholder="เลือกหมวดหมู่ KPI" />
+								</SelectTrigger>
+								<SelectContent>
+									{KPI_CATEGORIES.map((category) => (
+										<SelectItem key={category.value} value={category.value}>
+											<div>
+												<div className="font-medium">{category.label}</div>
+												<div className="text-xs text-muted-foreground">
+													{category.description}
+												</div>
+											</div>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							<p className="text-sm text-muted-foreground">
+								เลือกหมวดหมู่ KPI ที่เหมาะสมกับคำถามนี้
+							</p>
 						</div>
-
-						{/* Category */}
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<div className="space-y-2">
 								<Label htmlFor="category">หมวดหมู่</Label>
 								<Input
