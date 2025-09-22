@@ -1,0 +1,23 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EEF2FF"/>
+      <stop offset="100%" stop-color="#E0E7FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="800" height="450" rx="16" fill="url(#g)"/>
+  <g opacity="0.25">
+    <circle cx="120" cy="90" r="60" fill="#93C5FD"/>
+    <circle cx="720" cy="380" r="80" fill="#A78BFA"/>
+    <circle cx="680" cy="70" r="40" fill="#60A5FA"/>
+    <circle cx="100" cy="360" r="50" fill="#C4B5FD"/>
+  </g>
+  <g stroke="#6366F1" stroke-width="3" fill="#fff">
+    <circle cx="400" cy="200" r="70"/>
+    <path d="M400 165c-16 0-29 11-29 25 0 22 29 18 29 33v7" stroke-linecap="round"/>
+    <circle cx="400" cy="285" r="8" fill="#6366F1" stroke="none"/>
+  </g>
+  <text x="400" y="360" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="20" fill="#4F46E5">
+    Quiz placeholder image
+  </text>
+</svg>

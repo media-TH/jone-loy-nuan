@@ -17,13 +17,13 @@ export async function submitQuizSummaryAction(
 		const userAgent = rawData.userAgent as string;
 
 		const supabase = await createClient();
-		const { error } = await supabase.from("quiz_responses").insert([
+		const { error } = await supabase.from("quiz_sessions").insert([
 			{
 				session_id: sessionId,
 				total_questions: totalQuestions,
 				correct_answers: correctAnswers,
-				device_type: deviceType,
-				user_agent: userAgent,
+				device_fingerprint: deviceType,
+				anonymous_user_id: userAgent,
 			},
 		]);
 		if (error) throw error;
@@ -38,8 +38,8 @@ interface QuizResponseData {
 	session_id: string;
 	total_questions: number;
 	correct_answers: number;
-	device_type?: string;
-	user_agent?: string;
+	device_fingerprint?: string;
+	anonymous_user_id?: string;
 }
 
 export async function saveQuizResponse(data: QuizResponseData) {
@@ -54,13 +54,13 @@ export async function saveQuizResponse(data: QuizResponseData) {
 		}
 
 		const supabase = await createClient();
-		const { error } = await supabase.from("quiz_responses").insert([
+		const { error } = await supabase.from("quiz_sessions").insert([
 			{
 				session_id: data.session_id,
 				total_questions: data.total_questions,
 				correct_answers: data.correct_answers,
-				device_type: data.device_type || null,
-				user_agent: data.user_agent || null,
+				device_fingerprint: data.device_fingerprint || null,
+				anonymous_user_id: data.anonymous_user_id || null,
 			},
 		]);
 		

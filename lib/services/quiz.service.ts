@@ -9,8 +9,8 @@ export interface QuizResponseData {
   session_id: string;
   total_questions: number;
   correct_answers: number;
-  device_type: string;
-  user_agent: string;
+  device_fingerprint: string;
+  anonymous_user_id: string;
 }
 
 export interface DeviceInfo {

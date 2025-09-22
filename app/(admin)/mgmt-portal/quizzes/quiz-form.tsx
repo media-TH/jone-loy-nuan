@@ -58,9 +58,9 @@ export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 	const handleSubmit = async (formData: FormData) => {
 		try {
 			const result = await upsertQuestion(null, formData);
-			if (result?.error) {
-				toast.error(result.error);
-			} else if (result?.success) {
+			if (!result.success) {
+				toast.error(result.error || "เกิดข้อผิดพลาดในการบันทึก");
+			} else if (result.success) {
 				toast.success("คำถามบันทึกเรียบร้อยแล้ว!");
 				// Refresh และ redirect after successful save
 				router.refresh();

@@ -106,8 +106,8 @@ export function QuizClient({
 						session_id: sessionId,
 						total_questions: totalQuestions,
 						correct_answers: correctAnswers,
-						device_type: deviceInfo.type,
-						user_agent: deviceInfo.userAgent,
+						device_fingerprint: deviceInfo.type,
+						anonymous_user_id: deviceInfo.userAgent,
 					});
 				}
 			} catch (err) {
@@ -144,8 +144,8 @@ export function QuizClient({
 							session_id: sessionId,
 							total_questions: totalQuestions,
 							correct_answers: correctAnswers,
-							device_type: deviceInfo.type,
-							user_agent: deviceInfo.userAgent,
+							device_fingerprint: deviceInfo.type,
+							anonymous_user_id: deviceInfo.userAgent,
 						});
 					}
 				} catch (err) {
