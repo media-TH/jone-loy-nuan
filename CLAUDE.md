@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Thai online scam awareness quiz application ("สแกนโจร.online") built with Next.js 15, React 19, TypeScript, and Supabase. The app educates users about common online scams through interactive quizzes with scenario-based questions and visual content.
 
+**Domain**: `xn--12co4czb5a2kj.online` (สแกนโจร.online)
+**Primary Language**: Thai (`th_TH`)
+
 ## Development Commands
 
 ### Essential Commands
@@ -144,12 +147,13 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SUPABASE_JWT_SECRET=your-jwt-secret
 ```
 
-### Testing & Quality
-- TypeScript strict mode enabled
-- ESLint with Next.js rules
-- Custom ESLint overrides:
-  - `react/no-unescaped-entities`: off
-  - `@next/next/no-page-custom-font`: off
+### Code Quality & Standards
+- **TypeScript**: Strict mode enabled with path aliases (`@/*` maps to project root)
+- **ESLint**: Next.js flat config with custom overrides:
+  - `react/no-unescaped-entities`: off (for Thai text content)
+  - `@next/next/no-page-custom-font`: off (using Google Fonts)
+- **No testing framework** - manual testing only
+- **Always run** `npm run lint` and `npm run type-check` before commits
 
 ### Important Code Patterns
 
@@ -205,10 +209,12 @@ All database mutations use server actions in `lib/actions/`. Never call Supabase
 - CSS custom properties for theme customization
 - Two font families: Inter (primary), Prompt (Thai)
 
-### Localization
-- Primary language: Thai (`th_TH`)
-- All user-facing text in Thai
-- Domain: `xn--12co4czb5a2kj.online` (สแกนโจร.online)
+### Development Notes
+- All user-facing text must be in Thai
+- Use TypeScript strict mode for all new code
+- Follow existing code patterns and conventions
+- Prefer server actions over client-side Supabase calls
+- Always regenerate types after schema changes: `npx supabase gen types typescript --local > lib/database.types.ts`
 
 ## Common Development Tasks
 
