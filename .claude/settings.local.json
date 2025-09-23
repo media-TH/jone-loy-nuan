@@ -7,8 +7,10 @@
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
       "Bash(mv:*)",
-      "mcp__supabase__apply_migration"
+      "mcp__supabase__apply_migration",
+      "pnpm test"
     ],
     "deny": []
-  }
+  },
+  "outputStyle": "Explanatory"
 }

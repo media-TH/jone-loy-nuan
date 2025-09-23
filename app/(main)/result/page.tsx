@@ -12,14 +12,8 @@ import { getRiskAssessment } from "@/lib/transforms/quiz.transforms";
 
 export default function ResultPage() {
 	const router = useRouter();
-	const { getSummary, resetQuiz, saveQuizSummaryToApi } = useQuizResultStore();
+	const { getSummary, resetQuiz } = useQuizResultStore();
 	const { score, total } = getSummary();
-
-	// 📞 Save summary to API when page loads
-	useEffect(() => {
-		saveQuizSummaryToApi();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
 
 	// 🎯 Result design mapping using transform utilities
 	const resultDesign = useMemo(() => {

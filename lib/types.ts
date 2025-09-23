@@ -246,7 +246,12 @@ export interface SurveyResponse {
 }
 
 // Campaign Analytics Types
-export type KPICategory = 'SCAM_RECOGNITION' | 'RISK_ASSESSMENT' | 'PROTECTIVE_ACTIONS' | 'RESPONSE_STRATEGIES';
+export enum KPICategory {
+	SCAM_RECOGNITION = 'SCAM_RECOGNITION',
+	RISK_ASSESSMENT = 'RISK_ASSESSMENT',
+	PROTECTIVE_ACTIONS = 'PROTECTIVE_ACTIONS',
+	RESPONSE_STRATEGIES = 'RESPONSE_STRATEGIES'
+}
 export type SocialMediaPlatform = 'facebook' | 'instagram' | 'twitter' | 'line';
 
 // --- Database & API Related Types ---

@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/lib/database.types";
+import type { KPICategory } from "@/lib/types";
 
 // Re-use generated types from database.types.ts
 type QuestionRow =
@@ -45,10 +46,22 @@ export async function fetchQuestions(search: string) {
 	return (filteredData ?? []).map(toAdminDisplay);
 }
 
-// NEW: Function to fetch questions for the actual quiz client
+// NEW: Function to fetch questions for the actual quiz client with caching
 export async function fetchQuizQuestions() {
+	// Check cache first (client-side only)
+	if (typeof window !== 'undefined') {
+		const { CacheService } = await import('@/lib/services/cache.service');
+		const cacheKey = CacheService.keys.questions();
+		const cachedQuestions = CacheService.get(cacheKey);
+
+		if (cachedQuestions) {
+			console.log('[fetchQuizQuestions] Returning cached questions');
+			return cachedQuestions;
+		}
+	}
+
 	const supabase = await createClient();
-	// Fetch all questions and their answers (ไม่ใช้ .order())
+	// Fetch all questions and their answers
 	const { data, error } = await supabase.rpc("get_questions_with_answers");
 
 	if (error) {
@@ -61,6 +74,15 @@ export async function fetchQuizQuestions() {
 		(a: QuestionRow, b: QuestionRow) =>
 			(a.order_index ?? 0) - (b.order_index ?? 0)
 	);
+
+	// Cache the result (client-side only)
+	if (typeof window !== 'undefined' && sortedData.length > 0) {
+		const { CacheService } = await import('@/lib/services/cache.service');
+		const cacheKey = CacheService.keys.questions();
+		CacheService.set(cacheKey, sortedData, 'questions');
+		console.log('[fetchQuizQuestions] Cached questions for 5 minutes');
+	}
+
 	return sortedData;
 }
 
@@ -209,7 +231,7 @@ export async function deleteQuestionAction(
 export interface Quiz {
 	id: string;
 	question_text: string;
-	kpi_category: string | null;
+	kpi_category: KPICategory | null;
 	category: string | null;
 	order_index: number | null;
 	created_at: string | null;

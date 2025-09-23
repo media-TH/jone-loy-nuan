@@ -227,14 +227,17 @@ export default function SurveyPage() {
 	useEffect(() => {
 		if (state.success) {
 			toast.success(state.message, {
-				duration: 3000,
+				duration: 2000,
 				style: {
 					background: "linear-gradient(to right, #059669, #10b981)",
 					color: "white",
 					border: "none",
 				},
 			});
-			router.push("/result");
+			// Add delay to ensure toast shows before redirect
+			setTimeout(() => {
+				router.push("/result");
+			}, 1500);
 		} else if (state.message && !state.success) {
 			toast.error(state.message, {
 				duration: 4000,

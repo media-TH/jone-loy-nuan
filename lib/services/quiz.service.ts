@@ -1,9 +1,17 @@
 /**
- * 🔥 QuizService - Centralized API management
+ * 🔥 QuizService - Unified Quiz & Session Management
  * 
- * Solves the duplicate API calls problem by providing a single source of truth
- * for all quiz-related API operations with deduplication and error handling.
+ * Centralized service for all quiz-related operations including:
+ * - Session management
+ * - Response tracking
+ * - Device detection
+ * - Error handling with retry logic
  */
+
+import { createClient } from '@/utils/supabase/client';
+import { getOrCreateAnonymousUser } from './anonymous-user.service';
+
+// --- Types ---
 
 export interface QuizResponseData {
   session_id: string;
@@ -18,10 +26,44 @@ export interface DeviceInfo {
   userAgent: string;
 }
 
+export interface QuizSessionData {
+  id: string;
+  session_id: string;
+  anonymous_user_id: string;
+  total_questions: number;
+  completed_questions: number;
+  correct_answers: number;
+  device_type: string;
+  user_agent: string;
+  is_completed: boolean;
+  created_at: string;
+  expires_at: string;
+  total_summary_score: number;
+}
+
+export interface SessionCreateOptions {
+  totalQuestions: number;
+  sessionId: string;
+  userAgent: string;
+  deviceType: string;
+}
+
+export interface SessionUpdateData {
+  completed_questions?: number;
+  correct_answers?: number;
+  is_completed?: boolean;
+  completion_time_ms?: number;
+  total_summary_score?: number;
+}
+
+// --- Service Class ---
+
 export class QuizService {
-  private static pendingSubmissions = new Map<string, Promise<void>>();
+  private static pendingSubmissions = new Map<string, Promise<any>>();
   private static submittedSessions = new Set<string>();
-  
+  private static readonly MAX_RETRIES = 3;
+  private static readonly RETRY_DELAY = 1000;
+
   /**
    * Get device information for analytics
    */
@@ -29,43 +71,160 @@ export class QuizService {
     if (typeof window === 'undefined') {
       return { type: 'desktop', userAgent: '' };
     }
-    
+
     const width = window.innerWidth;
     let type: 'mobile' | 'tablet' | 'desktop' = 'desktop';
-    
+
     if (width < 640) type = 'mobile';
     else if (width < 1024) type = 'tablet';
-    
+
     return {
       type,
       userAgent: window.navigator.userAgent
     };
   }
-  
+
   /**
-   * Submit quiz response with deduplication
-   * Prevents multiple submissions for the same session
+   * Create new quiz session using RPC for immediate ID return
+   */
+  static async createSession(options: SessionCreateOptions): Promise<{
+    success: boolean;
+    session?: QuizSessionData;
+    message?: string;
+  }> {
+    try {
+      const supabase = createClient();
+      const anonymousUser = getOrCreateAnonymousUser();
+
+      const { data, error } = await supabase.rpc('create_quiz_session', {
+        p_session_id: options.sessionId,
+        p_anonymous_user_id: anonymousUser.id,
+        p_total_questions: options.totalQuestions,
+        p_device_type: options.deviceType,
+        p_user_agent: options.userAgent
+      }).single();
+
+      if (error) {
+        // Throw error to be caught by the calling function/test
+        throw new Error(error.message);
+      }
+
+      if (!data) {
+        throw new Error('Failed to create session: No data returned from RPC.');
+      }
+
+      return {
+        success: true,
+        session: data as QuizSessionData
+      };
+
+    } catch (error: any) {
+      console.error('[QuizService] Create session error:', error.message);
+      // This catch block now correctly handles errors thrown from the try block
+      return {
+        success: false,
+        message: error.message || 'Failed to create session'
+      };
+    }
+  }
+
+  /**
+   * Update existing quiz session
+   */
+  static async updateSession(
+    sessionId: string,
+    updateData: SessionUpdateData
+  ): Promise<{ success: boolean; session?: QuizSessionData; error?: string }> {
+    try {
+      const supabase = createClient();
+
+      const { data, error } = await supabase
+        .from('quiz_sessions')
+        .update(updateData)
+        .eq('session_id', sessionId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        session: data as QuizSessionData
+      };
+
+    } catch (error) {
+      console.error('[QuizService] Update session error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to update session'
+      };
+    }
+  }
+
+  /**
+   * Complete quiz session
+   */
+  static async completeSession(
+    sessionId: string,
+    completionData: {
+      completion_time_ms: number;
+      total_summary_score: number;
+    }
+  ): Promise<{ success: boolean; session?: Partial<QuizSessionData>; message?: string }> {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('quiz_sessions')
+        .update({
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+          ...completionData,
+        })
+        .eq('session_id', sessionId)
+        .select('id, is_completed, total_summary_score')
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return {
+        success: true,
+        session: data
+      };
+
+    } catch (error: any) {
+      console.error('[QuizService] Complete session error:', error.message);
+      return {
+        success: false,
+        message: error.message || 'Failed to complete session'
+      };
+    }
+  }
+
+  /**
+   * Submit quiz response with deduplication and retry logic
    */
   static async submitQuizResponse(data: QuizResponseData): Promise<void> {
     const { session_id } = data;
-    
-    // 🛡️ Deduplication: Check if already submitted
+
+    // Deduplication check
     if (this.submittedSessions.has(session_id)) {
       console.log(`[QuizService] Session ${session_id} already submitted, skipping`);
       return;
     }
-    
-    // 🛡️ Prevent concurrent submissions for same session
+
+    // Prevent concurrent submissions
     const existingPromise = this.pendingSubmissions.get(session_id);
     if (existingPromise) {
       console.log(`[QuizService] Session ${session_id} submission in progress, waiting...`);
       return existingPromise;
     }
-    
-    // 🚀 Create new submission promise
-    const submissionPromise = this._performSubmission(data);
+
+    // Create submission promise with retry logic
+    const submissionPromise = this.performSubmissionWithRetry(data);
     this.pendingSubmissions.set(session_id, submissionPromise);
-    
+
     try {
       await submissionPromise;
       this.submittedSessions.add(session_id);
@@ -74,32 +233,123 @@ export class QuizService {
       this.pendingSubmissions.delete(session_id);
     }
   }
-  
+
   /**
-   * Internal method to perform the actual submission using Server Action
+   * Internal method with retry logic
    */
-  private static async _performSubmission(data: QuizResponseData): Promise<void> {
-    const { saveQuizResponse } = await import('@/lib/actions/quiz');
-    
-    const result = await saveQuizResponse(data);
-    
-    if (!result.success) {
-      throw new Error(`Quiz submission failed: ${result.message || 'Unknown error'}`);
+  private static async performSubmissionWithRetry(
+    data: QuizResponseData,
+    attempt: number = 1
+  ): Promise<void> {
+    try {
+      const { saveQuizResponse } = await import('@/lib/actions/quiz');
+      const result = await saveQuizResponse(data);
+
+      if (!result.success) {
+        throw new Error(`Quiz submission failed: ${result.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      if (attempt < this.MAX_RETRIES) {
+        console.warn(`[QuizService] Submission attempt ${attempt} failed, retrying...`, error);
+        await this.delay(this.RETRY_DELAY * attempt);
+        return this.performSubmissionWithRetry(data, attempt + 1);
+      }
+      throw error;
     }
   }
-  
+
   /**
-   * Clear submission cache (useful for testing or reset)
+   * Get quiz session by ID
+   */
+  static async getSession(sessionId: string): Promise<{
+    success: boolean;
+    session?: QuizSessionData;
+    error?: string;
+  }> {
+    try {
+      const supabase = createClient();
+
+      const { data, error } = await supabase
+        .from('quiz_sessions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return { success: false, error: 'Session not found' };
+        }
+        throw error;
+      }
+
+      return {
+        success: true,
+        session: data as QuizSessionData
+      };
+
+    } catch (error) {
+      console.error('[QuizService] Get session error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get session'
+      };
+    }
+  }
+
+  /**
+   * Retries an async action a specified number of times with a delay.
+   * @param action The async function to retry.
+   * @param maxRetries The maximum number of retries.
+   * @param delay The delay between retries in milliseconds.
+   * @returns The result of the action if successful.
+   */
+  static async retryAction<T>(
+    action: () => Promise<T>,
+    maxRetries: number = 3,
+    delay: number = 100
+  ): Promise<T> {
+    let lastError: any;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await action();
+      } catch (error) {
+        lastError = error;
+        if (i < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  /**
+   * Clears the submission cache.
    */
   static clearSubmissionCache(): void {
     this.pendingSubmissions.clear();
     this.submittedSessions.clear();
   }
-  
+
   /**
-   * Check if a session has been submitted
+   * Utility Methods
    */
   static isSessionSubmitted(sessionId: string): boolean {
     return this.submittedSessions.has(sessionId);
+  }
+
+  private static generateSessionId(): string {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 9);
+    return `quiz_${timestamp}_${random}`;
+  }
+
+  private static getSessionExpiryTime(): string {
+    const expiryTime = new Date();
+    expiryTime.setHours(expiryTime.getHours() + 24);
+    return expiryTime.toISOString();
+  }
+
+  private static delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

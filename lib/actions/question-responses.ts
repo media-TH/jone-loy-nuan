@@ -11,24 +11,57 @@ interface QuestionResponseData {
 	selected_answer_id: string | null;
 	is_correct: boolean;
 	response_time_ms: number;
-	kpi_category_id: string;
+	kpi_category: string;
 	question_order: number;
 	device_type?: string;
 	user_agent?: string;
 }
 
 /**
- * 📝 Save individual question response
+ * 📝 Save individual question response with enhanced validation
  * Records each question response to question_responses table
  */
 export async function saveQuestionResponse(data: QuestionResponseData) {
 	try {
-		// Validate required fields
-		if (!data.quiz_session_id || !data.question_id || !data.kpi_category_id) {
-			throw new Error("ข้อมูลไม่ครบถ้วน: ต้องมี quiz_session_id, question_id, และ kpi_category_id");
+		// Enhanced validation
+		if (!data.quiz_session_id?.trim()) {
+			throw new Error("Quiz session ID is required");
+		}
+
+		if (!data.question_id?.trim()) {
+			throw new Error("Question ID is required");
+		}
+
+		if (!data.kpi_category?.trim()) {
+			throw new Error("KPI category is required");
+		}
+
+		if (typeof data.response_time_ms !== 'number' || data.response_time_ms < 0) {
+			throw new Error("Response time must be a non-negative number");
+		}
+
+		if (typeof data.question_order !== 'number' || data.question_order < 1) {
+			throw new Error("Question order must be a positive number");
 		}
 
 		const supabase = await createClient();
+
+		// Check if response already exists (prevent duplicates)
+		const { data: existingResponse } = await supabase
+			.from("question_responses")
+			.select("id")
+			.eq("quiz_session_id", data.quiz_session_id)
+			.eq("question_id", data.question_id)
+			.single();
+
+		if (existingResponse) {
+			return {
+				success: true,
+				message: "คำตอบนี้ถูกบันทึกไว้แล้ว",
+				action: 'skipped'
+			};
+		}
+
 		const { error } = await supabase.from("question_responses").insert([
 			{
 				quiz_session_id: data.quiz_session_id,
@@ -36,66 +69,81 @@ export async function saveQuestionResponse(data: QuestionResponseData) {
 				selected_answer_id: data.selected_answer_id,
 				is_correct: data.is_correct,
 				response_time_ms: data.response_time_ms,
-				kpi_category_id: data.kpi_category_id,
+				kpi_category: data.kpi_category,
 				question_order: data.question_order,
-				device_type: data.device_type || null,
-				user_agent: data.user_agent || null,
+				answered_at: new Date().toISOString()
 			},
 		]);
 
 		if (error) throw error;
 
-		return { success: true, message: "บันทึกคำตอบสำเร็จ!" };
+		return {
+			success: true,
+			message: "บันทึกคำตอบสำเร็จ!",
+			action: 'created'
+		};
 	} catch (error: any) {
-		return { success: false, message: error?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบ" };
+		console.error('[saveQuestionResponse] Error:', error);
+		return {
+			success: false,
+			message: error?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบ"
+		};
 	}
 }
 
 /**
- * 📊 Save multiple question responses in batch
- * Efficient batch insertion for multiple responses
+ * 📦 Batch save multiple question responses
+ * More efficient for saving multiple responses at once
  */
 export async function saveQuestionResponsesBatch(responses: QuestionResponseData[]) {
 	try {
 		if (!responses || responses.length === 0) {
-			throw new Error("ไม่มีข้อมูลคำตอบที่จะบันทึก");
+			throw new Error("No responses to save");
 		}
 
 		// Validate all responses
-		for (const response of responses) {
-			if (!response.quiz_session_id || !response.question_id || !response.kpi_category_id) {
-				throw new Error("ข้อมูลไม่ครบถ้วนในบางคำตอบ");
+		for (const [index, response] of responses.entries()) {
+			if (!response.quiz_session_id?.trim()) {
+				throw new Error(`Response ${index + 1}: Quiz session ID is required`);
+			}
+			if (!response.question_id?.trim()) {
+				throw new Error(`Response ${index + 1}: Question ID is required`);
+			}
+			if (!response.kpi_category?.trim()) {
+				throw new Error(`Response ${index + 1}: KPI category is required`);
 			}
 		}
 
 		const supabase = await createClient();
 
 		// Prepare data for batch insert
-		const batchData = responses.map(data => ({
-			quiz_session_id: data.quiz_session_id,
-			question_id: data.question_id,
-			selected_answer_id: data.selected_answer_id,
-			is_correct: data.is_correct,
-			response_time_ms: data.response_time_ms,
-			kpi_category_id: data.kpi_category_id,
-			question_order: data.question_order,
-			device_type: data.device_type || null,
-			user_agent: data.user_agent || null,
+		const responseData = responses.map(response => ({
+			quiz_session_id: response.quiz_session_id,
+			question_id: response.question_id,
+			selected_answer_id: response.selected_answer_id,
+			is_correct: response.is_correct,
+			response_time_ms: response.response_time_ms,
+			kpi_category: response.kpi_category,
+			question_order: response.question_order,
+			answered_at: new Date().toISOString()
 		}));
 
-		const { error } = await supabase.from("question_responses").insert(batchData);
+		const { error } = await supabase
+			.from("question_responses")
+			.insert(responseData);
 
 		if (error) throw error;
 
 		return {
 			success: true,
-			message: `บันทึกคำตอบทั้งหมด ${responses.length} ข้อสำเร็จ!`,
+			message: `บันทึกคำตอบ ${responses.length} ข้อสำเร็จ!`,
 			count: responses.length
 		};
 	} catch (error: any) {
+		console.error('[saveQuestionResponsesBatch] Error:', error);
 		return {
 			success: false,
-			message: error?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบแบบกลุ่ม"
+			message: error?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบ"
 		};
 	}
 }

@@ -8,6 +8,9 @@ import { ZodError } from "zod";
 export async function submitSurveyAction(prevState: any, formData: FormData) {
 	try {
 		const rawData = Object.fromEntries(formData.entries());
+
+		// Note: totalScore and totalQuestions are not stored in survey_responses table
+		// They are for validation only or could be stored elsewhere if needed
 		const totalScore = parseInt(rawData.totalScore as string) || 0;
 		const totalQuestions = parseInt(rawData.totalQuestions as string) || 10;
 
@@ -22,17 +25,17 @@ export async function submitSurveyAction(prevState: any, formData: FormData) {
 		// Validate
 		surveySchema.parse(surveyData);
 
-		// บันทึกลง Supabase
+		// บันทึกลง Supabase - only fields that exist in the table
 		const supabase = await createClient();
 		const { error } = await supabase.from("survey_responses").insert([
 			{
-				total_score: totalScore,
-				total_questions: totalQuestions,
 				age_group: surveyData.ageGroup,
 				education: surveyData.education,
 				occupation: surveyData.occupation,
+				// quiz_session_id can be added later if needed for linking
 			},
 		]);
+
 		if (error) throw error;
 
 		return { success: true, message: "ขอบคุณสำหรับการให้ข้อมูล! 🎉" };

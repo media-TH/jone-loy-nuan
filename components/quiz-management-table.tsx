@@ -77,6 +77,7 @@ import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { type Quiz, updateQuizOrderAction, updateQuizAction, deleteQuizAction } from "@/lib/actions/questions"
+import { type KPICategory } from "@/lib/types"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -254,7 +255,7 @@ function createColumns(handleDeleteQuiz: (id: string) => void): ColumnDef<Quiz>[
               ทำสำเนา
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={() => handleDeleteQuiz(row.original.id.toString())}>
+            <DropdownMenuItem variant="destructive" onClick={() => handleDeleteQuiz(row.original.id)}>
               <IconTrash className="mr-2 size-4" />
               ลบ
             </DropdownMenuItem>
@@ -628,7 +629,7 @@ function QuizCellViewer({
       const updatedQuiz = {
         ...item,
         question_text: formData.get("question") as string,
-        kpi_category: formData.get("kpi_category") as string,
+        kpi_category: formData.get("kpi_category") as KPICategory,
         order_index: Number.parseInt(formData.get("order") as string),
         is_active: formData.get("status") === "active",
       }

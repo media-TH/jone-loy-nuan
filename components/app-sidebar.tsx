@@ -2,18 +2,13 @@
 
 import * as React from "react"
 import {
-  IconChartBar,
   IconDashboard,
   IconListDetails,
   IconSettings,
   IconBook,
-  IconPlus,
-  IconInnerShadowTop,
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -38,19 +33,9 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "รายงานผล",
-      url: "/mgmt-portal/analytics",
-      icon: IconChartBar,
-    },
-    {
       title: "จัดการคำถาม",
       url: "/mgmt-portal/quizzes",
       icon: IconListDetails,
-    },
-    {
-      title: "สร้างคำถามใหม่",
-      url: "/mgmt-portal/quizzes/new",
-      icon: IconPlus,
     },
     {
       title: "ตั้งค่า",
