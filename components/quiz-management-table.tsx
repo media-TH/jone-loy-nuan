@@ -327,7 +327,7 @@ export function QuizManagementTable({ initialData = [] as Quiz[] }: { initialDat
         setIsUpdating(false)
       }
     },
-    [toast],
+    [],
   )
 
   const columns = React.useMemo(() => createColumns(handleDeleteQuiz), [handleDeleteQuiz])

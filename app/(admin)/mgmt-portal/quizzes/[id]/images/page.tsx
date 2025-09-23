@@ -38,7 +38,7 @@ export default async function UploadImagesPage({ params }: PageProps) {
 						<h2 className="text-lg font-semibold mb-2">Normal State Image</h2>
 						<div className="border rounded-md p-2 h-64 flex items-center justify-center bg-gray-50">
 							<Image
-								src={question.normal_image_url}
+								src={question.content?.images?.normal || "/placeholder.svg"}
 								alt="Normal state preview"
 								width={300}
 								height={200}
@@ -50,7 +50,7 @@ export default async function UploadImagesPage({ params }: PageProps) {
 						<h2 className="text-lg font-semibold mb-2">Result State Image</h2>
 						<div className="border rounded-md p-2 h-64 flex items-center justify-center bg-gray-50">
 							<Image
-								src={question.result_image_url}
+								src={question.content?.images?.result || "/placeholder.svg"}
 								alt="Result state preview"
 								width={300}
 								height={200}

@@ -30,8 +30,8 @@ export function ContentArea({
 	}
 
 	// สำหรับข้ออื่นๆ (รูปภาพ)
-	const normalImageUrl = questionData.normal_image_url;
-	const resultImageUrl = questionData.result_image_url;
+	const normalImageUrl = questionData.content?.images?.normal;
+	const resultImageUrl = questionData.content?.images?.result;
 
 	if (!normalImageUrl && !resultImageUrl) {
 		return (

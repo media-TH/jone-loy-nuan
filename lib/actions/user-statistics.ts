@@ -26,6 +26,18 @@ export interface UserStatisticsFilters {
   offset?: number;
 }
 
+export interface VisitorSeriesPoint {
+  date: string; // YYYY-MM-DD
+  visitors: number;
+  completed: number;
+}
+
+export interface VisitorAnalytics {
+  series: VisitorSeriesPoint[]; // up to last 90 days
+  has90d: boolean; // enable 3 months toggle only if true
+  daysAvailable: number; // total historical days available in table
+}
+
 export async function getUserStatistics(filters: UserStatisticsFilters = {}) {
   const supabase = await createClient();
 
@@ -161,4 +173,69 @@ export async function getUserStatisticsSummary() {
   }
 
   return summary;
+}
+
+export async function getVisitorAnalytics(): Promise<VisitorAnalytics> {
+  const supabase = await createClient();
+
+  // 1) Find earliest record to know how many days we have
+  const { data: earliestRows, error: earliestError } = await supabase
+    .from('user_statistics')
+    .select('created_at')
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (earliestError) {
+    console.error('Error fetching earliest user_statistics:', earliestError);
+    throw new Error('Failed to fetch visitor analytics');
+  }
+
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  let daysAvailable = 0;
+  if (earliestRows && earliestRows.length > 0) {
+    const first = new Date(earliestRows[0].created_at);
+    const firstDay = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), first.getUTCDate()));
+    const diffMs = today.getTime() - firstDay.getTime();
+    daysAvailable = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
+  }
+
+  const has90d = daysAvailable >= 90;
+
+  // 2) Fetch last 90 days raw rows and aggregate client-side (safe volume)
+  const fromDate = new Date(today);
+  fromDate.setUTCDate(fromDate.getUTCDate() - 89); // inclusive window of 90 days ending today
+
+  const { data: rows, error } = await supabase
+    .from('user_statistics')
+    .select('created_at,is_completed')
+    .gte('created_at', fromDate.toISOString());
+
+  if (error) {
+    console.error('Error fetching user_statistics for timeseries:', error);
+    throw new Error('Failed to fetch visitor analytics');
+  }
+
+  // 3) Build a continuous day-by-day series
+  const byDate = new Map<string, { visitors: number; completed: number }>();
+  for (const row of rows || []) {
+    const d = new Date(row.created_at);
+    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+    const cur = byDate.get(key) || { visitors: 0, completed: 0 };
+    cur.visitors += 1;
+    if (row.is_completed) cur.completed += 1;
+    byDate.set(key, cur);
+  }
+
+  const series: VisitorSeriesPoint[] = [];
+  for (let i = 0; i < 90; i++) {
+    const d = new Date(fromDate);
+    d.setUTCDate(fromDate.getUTCDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    const agg = byDate.get(key) || { visitors: 0, completed: 0 };
+    series.push({ date: key, visitors: agg.visitors, completed: agg.completed });
+  }
+
+  return { series, has90d, daysAvailable };
 }

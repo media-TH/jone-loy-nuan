@@ -1,10 +1,10 @@
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { SectionCards } from "@/components/section-cards";
 import { UserStatisticsTable } from "@/components/user-statistics-table";
-import { getQuizzesServer } from "@/lib/actions/questions";
+import { getVisitorAnalytics } from "@/lib/actions/user-statistics";
 
-export default async function Page() {
-  const quizzes = await getQuizzesServer();
+export default async function Page() {  
+  const analytics = await getVisitorAnalytics();
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
@@ -17,7 +17,7 @@ export default async function Page() {
         </div>
         <SectionCards />
         <div className="px-4 lg:px-6">
-          <ChartAreaInteractive />
+          <ChartAreaInteractive analytics={analytics} />
         </div>
         <div className="px-4 lg:px-6">
           <UserStatisticsTable />
