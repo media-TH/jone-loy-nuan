@@ -6,7 +6,8 @@
       "Bash(pnpm install:*)",
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "mcp__supabase__apply_migration"
     ],
     "deny": []
   }

@@ -75,6 +75,16 @@ export default async function QuizManagementPage() {
         </Card>
       </div>
 
+      {/* Image Manager placeholder (module not yet implemented) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>รูปภาพประกอบ (Global Storage)</CardTitle>
+          <CardDescription>
+            ฟีเจอร์จัดการรูปภาพรวมกำลังพัฒนา โปรดใช้การอัปโหลดรูปภาพในหน้ารายการคำถามแต่ละข้อชั่วคราว
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
       {/* Quiz Management Table */}
       <Card>
         <CardHeader>

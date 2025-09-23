@@ -1,5 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
-import { AdminHeader } from "@/components/admin-header";
+import { SiteHeader } from "@/components/site-header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +40,19 @@ async function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<AdminHeader user={data.user} />
-			<main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
-		</div>
+		<SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <main className="flex-1 p-6">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
 	);
 }

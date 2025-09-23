@@ -83,7 +83,10 @@ export function QuizClient({
 		const answer = answers.find((a) => a.id === answerId);
 		addResponse({
 			questionId: currentQuestion.id,
+			answerId: answerId || null,
 			isCorrect: answer?.isCorrect || false,
+			kpiCategoryId: currentQuestion.kpi_category || "SCAM_RECOGNITION",
+			questionOrder: currentQuestion.order_index,
 		});
 	};
 
@@ -124,7 +127,10 @@ export function QuizClient({
 		// บันทึก response (ข้อแรกไม่มี answerId)
 		addResponse({
 			questionId: currentQuestion.id,
+			answerId: null,
 			isCorrect,
+			kpiCategoryId: currentQuestion.kpi_category || "SCAM_RECOGNITION",
+			questionOrder: currentQuestion.order_index,
 		});
 	};
 
