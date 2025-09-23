@@ -85,7 +85,8 @@ export async function getUserStatistics(filters: UserStatisticsFilters = {}) {
 
   if (error) {
     console.error('Error fetching user statistics:', error);
-    throw new Error('Failed to fetch user statistics');
+    // Return empty array instead of throwing
+    return [];
   }
 
   return data as UserStatistic[];
@@ -103,12 +104,29 @@ export async function getUserStatisticsSummary() {
       is_completed,
       performance_level,
       recency
-    `)
-    .not('anonymous_user_id', 'is', null);
+    `);
 
   if (error) {
     console.error('Error fetching user statistics summary:', error);
-    throw new Error('Failed to fetch user statistics summary');
+    // Return empty summary instead of throwing
+    return {
+      total_users: 0,
+      completed_users: 0,
+      completion_rate: 0,
+      avg_score: 0,
+      avg_completion_time: 0,
+      device_breakdown: {
+        mobile: 0,
+        desktop: 0,
+        tablet: 0
+      },
+      performance_breakdown: {
+        excellent: 0,
+        good: 0,
+        fair: 0,
+        needs_improvement: 0
+      }
+    };
   }
 
   // Calculate summary metrics
@@ -187,7 +205,12 @@ export async function getVisitorAnalytics(): Promise<VisitorAnalytics> {
 
   if (earliestError) {
     console.error('Error fetching earliest user_statistics:', earliestError);
-    throw new Error('Failed to fetch visitor analytics');
+    // Return empty analytics instead of throwing
+    return {
+      series: [],
+      has90d: false,
+      daysAvailable: 0
+    };
   }
 
   const now = new Date();
@@ -214,7 +237,12 @@ export async function getVisitorAnalytics(): Promise<VisitorAnalytics> {
 
   if (error) {
     console.error('Error fetching user_statistics for timeseries:', error);
-    throw new Error('Failed to fetch visitor analytics');
+    // Return empty analytics instead of throwing
+    return {
+      series: [],
+      has90d: false,
+      daysAvailable: 0
+    };
   }
 
   // 3) Build a continuous day-by-day series
