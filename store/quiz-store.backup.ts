@@ -105,8 +105,8 @@ export const useQuizResultStore = create<QuizResultStore>()(
 						session_id: sessionId,
 						total_questions: totalQuestions,
 						correct_answers: correctAnswers,
-						device_type: deviceInfo.type,
-						user_agent: deviceInfo.userAgent,
+						device_fingerprint: `${deviceInfo.type}-${deviceInfo.userAgent.slice(0, 20)}`,
+						anonymous_user_id: sessionId,
 					};
 
 					await QuizService.submitQuizResponse(summaryData);
