@@ -41,3 +41,26 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# test files
+__tests__/
+*.test.*
+*.spec.*
+jest.config.*
+jest.setup.*
+coverage/
+.nyc_output/
+
+# jest
+jest.config.js
+jest.setup.ts
+tsconfig.jest.json
+
+# documentation
+*.md
+!README.md
+
+# mcp files
+*.mcp
+mcp/
+.mcp/
