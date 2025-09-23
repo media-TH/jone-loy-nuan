@@ -187,7 +187,6 @@ export class PerformanceMonitor {
         const stats = this.getAllStats();
 
         if (Object.keys(stats).length === 0) {
-            console.log('[PerformanceMonitor] No performance data available');
             return;
         }
 

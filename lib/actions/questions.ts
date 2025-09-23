@@ -55,7 +55,6 @@ export async function fetchQuizQuestions() {
 		const cachedQuestions = CacheService.get(cacheKey);
 
 		if (cachedQuestions) {
-			console.log('[fetchQuizQuestions] Returning cached questions');
 			return cachedQuestions;
 		}
 	}
@@ -80,7 +79,6 @@ export async function fetchQuizQuestions() {
 		const { CacheService } = await import('@/lib/services/cache.service');
 		const cacheKey = CacheService.keys.questions();
 		CacheService.set(cacheKey, sortedData, 'questions');
-		console.log('[fetchQuizQuestions] Cached questions for 5 minutes');
 	}
 
 	return sortedData;

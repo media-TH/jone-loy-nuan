@@ -284,8 +284,7 @@ export const useQuizResultStore = create<QuizResultStore>()(
 						throw new Error(result.message || 'Failed to save responses');
 					}
 
-					console.log(`[QuizStore] ${result.count} responses saved, quiz_sessions updated by trigger`);
-					set({ isLoading: false });
+						set({ isLoading: false });
 
 				} catch (error) {
 					console.error('[QuizStore] Failed to save quiz summary:', error);

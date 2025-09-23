@@ -210,14 +210,12 @@ export class QuizService {
 
     // Deduplication check
     if (this.submittedSessions.has(session_id)) {
-      console.log(`[QuizService] Session ${session_id} already submitted, skipping`);
       return;
     }
 
     // Prevent concurrent submissions
     const existingPromise = this.pendingSubmissions.get(session_id);
     if (existingPromise) {
-      console.log(`[QuizService] Session ${session_id} submission in progress, waiting...`);
       return existingPromise;
     }
 
@@ -228,7 +226,6 @@ export class QuizService {
     try {
       await submissionPromise;
       this.submittedSessions.add(session_id);
-      console.log(`[QuizService] Session ${session_id} submitted successfully`);
     } finally {
       this.pendingSubmissions.delete(session_id);
     }

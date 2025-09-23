@@ -29,9 +29,11 @@ export function ContentArea({
 		);
 	}
 
-	// สำหรับข้ออื่นๆ (รูปภาพ)
-	const normalImageUrl = questionData.content?.images?.normal;
-	const resultImageUrl = questionData.content?.images?.result;
+	// สำหรับข้ออื่นๆ (รูปภาพ) พร้อม fallback
+	const normalImageUrl = questionData.content?.images?.normal ||
+		`/images/scenarios/question-${questionData.order_index}/normal.svg`;
+	const resultImageUrl = questionData.content?.images?.result ||
+		`/images/scenarios/question-${questionData.order_index}/result.svg`;
 
 	if (!normalImageUrl && !resultImageUrl) {
 		return (
