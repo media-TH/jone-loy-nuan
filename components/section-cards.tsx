@@ -17,26 +17,26 @@ import { useDashboardData } from "@/hooks/use-dashboard-data";
 const KPI_CATEGORIES = [
   {
     key: "scam_recognition",
-    title: "Scam Recognition",
-    description: "การรู้จำกลโกง",
+    title: "Fraud Awareness",
+    description: "รู้เท่าทันและตระหนักถึงกลโกง",
     color: "bg-blue-500",
   },
   {
     key: "risk_assessment",
-    title: "Risk Assessment",
-    description: "การประเมินความเสี่ยง",
+    title: "Advertising Credibility",
+    description: "ประเมินความน่าเชื่อถือสื่อโฆษณา",
     color: "bg-green-500",
   },
   {
     key: "protective_actions",
-    title: "Protective Actions",
-    description: "การป้องกัน",
+    title: "Crime Prevention",
+    description: "มาตรการป้องกันและปราบปรามอาชญากรรม",
     color: "bg-yellow-500",
   },
   {
     key: "response_strategies",
-    title: "Response Strategies",
-    description: "กลยุทธ์การตอบสนอง",
+    title: "Cyber Security",
+    description: "วิธีการรักษาความปลอดภัยไซเบอร์",
     color: "bg-purple-500",
   },
 ];
@@ -157,7 +157,7 @@ export function SectionCards() {
           </CardHeader>
           <CardFooter className="flex-col items-start gap-1.5 text-sm">
             <div className="line-clamp-1 flex gap-2 font-medium">
-              ประสิทธิภาพโดยรวม
+              คะแนนเฉลี่ยรวมทุกข้อ
             </div>
             <div className="text-muted-foreground">
               จากการตอบคำถามทั้งหมด
