@@ -85,7 +85,7 @@ export function ChartAreaInteractive({ analytics }: ChartAreaInteractiveProps) {
       <CardHeader>
         <CardTitle>ผู้เข้าชมระบบ (Visitors) และผู้ทำแบบทดสอบ</CardTitle>
         <CardDescription>
-          <span className="hidden @[540px]/card:block">ภาพรวมช่วงเวลา 7/30/90 วันย้อนหลัง</span>
+          <span className="hidden @[540px]/card:block">ภาพรวมช่วงเวลาวันย้อนหลัง</span>
           <span className="@[540px]/card:hidden">เลือกช่วงเวลา</span>
         </CardDescription>
         <CardAction>

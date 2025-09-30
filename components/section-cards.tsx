@@ -1,6 +1,6 @@
 "use client";
 
-import { IconTrendingDown, IconTrendingUp, IconTarget, IconUsers, IconTrophy } from "@tabler/icons-react";
+import { IconTrendingDown, IconTrendingUp, IconUsers, IconTrophy } from "@tabler/icons-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -48,7 +48,21 @@ export function SectionCards() {
   const isLoading = kpiLoading || dashboardLoading;
 
   if (isLoading) {
-    return (      
+    return (
+      <div className="px-4 lg:px-6 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          {[...Array(2)].map((_, i) => (
+            <Card key={`top-${i}`} className="flex-1 animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              </CardHeader>
+              <CardFooter>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <Card key={`kpi-${i}`} className="animate-pulse">
@@ -61,22 +75,23 @@ export function SectionCards() {
               </CardFooter>
             </Card>
           ))}
-        </div>     
+        </div>
+      </div>
     );
   }
 
   if (!kpiData || !stats) {
-    return (      
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={`empty-${i}`}>
-              <CardHeader>
-                <CardDescription>ไม่สามารถโหลดข้อมูลได้</CardDescription>
-                <CardTitle className="text-2xl font-semibold">-</CardTitle>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>      
+    return (
+      <div className="px-4 lg:px-6 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Card className="flex-1">
+            <CardHeader>
+              <CardDescription>Error</CardDescription>
+              <CardTitle className="text-2xl font-semibold">ไม่สามารถโหลดข้อมูลได้</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
     );
   }
 
@@ -94,7 +109,47 @@ export function SectionCards() {
   };
 
   return (
-    <div className="px-4 lg:px-6">
+    <div className="px-4 lg:px-6 space-y-4">
+      <div className="flex flex-col md:flex-row gap-4">
+        <Card className="flex-1 @container/card">
+          <CardHeader>
+            <CardDescription>จำนวนผู้ใช้ทั้งหมด</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {/* {stats.totalResponses.toLocaleString()} */} 1144
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline" className="text-blue-600">
+                <IconUsers className="mr-1 h-3 w-3" />
+                ผู้ใช้งาน
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">Total Users</div>
+            <div className="text-muted-foreground">จำนวนครั้งที่ทำ Quiz ทั้งหมด</div>
+          </CardFooter>
+        </Card>
+
+        <Card className="flex-1 @container/card">
+          <CardHeader>
+            <CardDescription>Overall Performance</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {kpiData.overall_percentage}%
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline" className="text-orange-600">
+                <IconTrophy className="mr-1 h-3 w-3" />
+                คะแนน
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">ประสิทธิภาพโดยรวม</div>
+            <div className="text-muted-foreground">จากการตอบคำถามทั้งหมด</div>
+          </CardFooter>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {KPI_CATEGORIES.map((category) => {
           const value = getKpiValue(category.key + "_percentage");
@@ -130,3 +185,4 @@ export function SectionCards() {
     </div>
   );
 }
+
