@@ -22,6 +22,8 @@ export interface UserStatisticsFilters {
   performance_level?: 'excellent' | 'good' | 'fair' | 'needs_improvement';
   recency?: 'last_hour' | 'last_day' | 'last_week' | 'last_month' | 'older';
   is_completed?: boolean;
+  date_from?: string; // YYYY-MM-DD format
+  date_to?: string; // YYYY-MM-DD format
   limit?: number;
   offset?: number;
 }
@@ -74,6 +76,15 @@ export async function getUserStatistics(filters: UserStatisticsFilters = {}) {
 
   if (filters.is_completed !== undefined) {
     query = query.eq('is_completed', filters.is_completed);
+  }
+
+  // Apply date range filter
+  if (filters.date_from) {
+    query = query.gte('created_at', filters.date_from + 'T00:00:00Z');
+  }
+
+  if (filters.date_to) {
+    query = query.lte('created_at', filters.date_to + 'T23:59:59Z');
   }
 
   // Apply pagination

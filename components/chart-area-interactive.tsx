@@ -59,14 +59,23 @@ export function ChartAreaInteractive({ analytics }: ChartAreaInteractiveProps) {
   }, [isMobile])
 
   const filteredData = React.useMemo(() => {
-    const end = analytics.series.length ? new Date(analytics.series[analytics.series.length - 1].date + "T00:00:00Z") : new Date()
-    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90
-    const start = new Date(end)
-    start.setUTCDate(end.getUTCDate() - (days - 1))
-    return analytics.series.filter((p) => {
+    // Fixed date range: Sep 1, 2025 to Sep 24, 2025
+    const start = new Date("2025-09-01T00:00:00Z")
+    const end = new Date("2025-09-24T00:00:00Z")
+    
+    // Filter data within the fixed date range
+    const rangeFiltered = analytics.series.filter((p) => {
       const d = new Date(p.date + "T00:00:00Z")
       return d >= start && d <= end
     })
+    
+    // Further filter by time range selector if needed
+    if (timeRange === "7d" || timeRange === "30d") {
+      const daysToShow = timeRange === "7d" ? 7 : 24 // Show all 24 days for 30d option
+      return rangeFiltered.slice(-daysToShow)
+    }
+    
+    return rangeFiltered
   }, [analytics.series, timeRange])
 
   const disable90 = !analytics.has90d

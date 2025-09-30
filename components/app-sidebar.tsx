@@ -6,6 +6,7 @@ import {
   IconListDetails,
   IconSettings,
   IconBook,
+  IconChartBar,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -28,9 +29,14 @@ const data = {
   },
   navMain: [
     {
-      title: "แดชบอร์ด",
+      title: "Dashboard",
       url: "/mgmt-portal",
       icon: IconDashboard,
+    },
+    {
+      title: "Analytics",
+      url: "/mgmt-portal/analytics",
+      icon: IconChartBar,
     },
     {
       title: "จัดการคำถาม",

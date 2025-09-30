@@ -41,6 +41,7 @@ async function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
 	return (
 		<SidebarProvider
+      className="h-svh overflow-hidden"
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
@@ -49,9 +50,11 @@ async function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset>
+      <SidebarInset className="flex flex-col overflow-hidden">
         <SiteHeader />
-        <main className="flex-1 p-6">{children}</main>
+        <div className="flex-1 overflow-y-auto p-6">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
 	);
