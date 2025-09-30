@@ -12,7 +12,9 @@ interface ResultCardProps {
 		wrongTitle: string;
 		header: string;
 		explanation: string;
+		category?: string;
 	};
+	category?: string;
 	onReset: () => void;
 	isLoading?: boolean;
 	isLastQuestion?: boolean;
@@ -22,6 +24,7 @@ export const ResultCard = ({
 	showResult,
 	isCorrect,
 	result,
+	category,
 	onReset,
 	isLoading = false,
 	isLastQuestion = false,
@@ -302,8 +305,8 @@ export const ResultCard = ({
 												animate={{ opacity: 1, scale: 1 }}
 												transition={{ delay: 0.3 }}
 											>
-												{result.header}
-											</motion.p>
+												{category}
+											</motion.p>											
 										</div>
 									</div>
 								</motion.div>

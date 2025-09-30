@@ -244,6 +244,7 @@ export function QuizClient({
 				showResult={showResult}
 				isCorrect={isCorrect}
 				result={currentQuestion.result as unknown as QuizResult}
+				category={currentQuestion.category}
 				onReset={handleReset}
 				isLoading={isTransitioning}
 				isLastQuestion={isLastQuestion}

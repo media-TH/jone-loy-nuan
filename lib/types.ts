@@ -23,9 +23,10 @@ export interface Answer {
 
 export interface QuizResult {
 	correctTitle: string;
-	wrongTitle: string;
-	header: string;
-	explanation: string;
+		wrongTitle: string;
+		header: string;
+		explanation: string;
+		category?: string;
 }
 
 // 🆕 เพิ่ม type สำหรับ Scam Categories
@@ -89,6 +90,7 @@ export interface ResultCardProps {
 	showResult: boolean;
 	isCorrect: boolean | null;
 	result: QuizResult;
+	category?: string;
 	onReset: () => void;
 	isLoading?: boolean;
 }
