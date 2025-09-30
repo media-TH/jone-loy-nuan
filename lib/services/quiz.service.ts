@@ -95,10 +95,15 @@ export class QuizService {
     try {
       const supabase = createClient();
       const anonymousUser = getOrCreateAnonymousUser();
+      
+      // Guard-prefix anonymous_user_id
+      const ensuredAnonymousId = anonymousUser.id.startsWith('user_') 
+        ? anonymousUser.id 
+        : `user_${anonymousUser.id}`;
 
       const { data, error } = await supabase.rpc('create_quiz_session', {
         p_session_id: options.sessionId,
-        p_anonymous_user_id: anonymousUser.id,
+        p_anonymous_user_id: ensuredAnonymousId,
         p_total_questions: options.totalQuestions,
         p_device_type: options.deviceType,
         p_user_agent: options.userAgent
@@ -328,24 +333,10 @@ export class QuizService {
   }
 
   /**
-   * Utility Methods
+   * Utility method to delay execution.
+   * @param ms The delay time in milliseconds.
+   * @returns A promise that resolves after the specified delay.
    */
-  static isSessionSubmitted(sessionId: string): boolean {
-    return this.submittedSessions.has(sessionId);
-  }
-
-  private static generateSessionId(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substr(2, 9);
-    return `quiz_${timestamp}_${random}`;
-  }
-
-  private static getSessionExpiryTime(): string {
-    const expiryTime = new Date();
-    expiryTime.setHours(expiryTime.getHours() + 24);
-    return expiryTime.toISOString();
-  }
-
   private static delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

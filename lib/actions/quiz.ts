@@ -9,16 +9,19 @@ export async function submitQuizSummaryAction(
 ) {
 	try {
 		const rawData = Object.fromEntries(formData.entries());
-		// ดึงข้อมูลจาก formData ตามที่ต้องการ
 		const sessionId = rawData.sessionId as string;
 		const totalQuestions = parseInt(rawData.totalQuestions as string) || 0;
 		const correctAnswers = parseInt(rawData.correctAnswers as string) || 0;
 		const deviceType = rawData.deviceType as string;
-		const userAgent = rawData.userAgent as string;
+		const anonymousUserId = rawData.anonymousUserId as string;
 
 		const supabase = await createClient();
 
-		// ใช้ UPSERT แทน INSERT
+		// Guard-prefix anonymous_user_id
+		const ensuredAnonymousId = anonymousUserId && anonymousUserId.trim()
+			? (anonymousUserId.startsWith('user_') ? anonymousUserId : `user_${anonymousUserId}`)
+			: null;
+
 		const { error } = await supabase
 			.from("quiz_sessions")
 			.upsert([
@@ -27,7 +30,7 @@ export async function submitQuizSummaryAction(
 					total_questions: totalQuestions,
 					correct_answers: correctAnswers,
 					device_fingerprint: deviceType,
-					anonymous_user_id: userAgent,
+					anonymous_user_id: ensuredAnonymousId,
 					completed_at: new Date().toISOString(),
 					is_completed: true
 				}
@@ -53,7 +56,6 @@ interface QuizResponseData {
 
 export async function saveQuizResponse(data: QuizResponseData) {
 	try {
-		// Enhanced validation
 		if (!data.session_id?.trim()) {
 			throw new Error("Session ID is required");
 		}
@@ -72,7 +74,6 @@ export async function saveQuizResponse(data: QuizResponseData) {
 
 		const supabase = await createClient();
 
-		// Check if session exists first
 		const { data: existingSession, error: checkError } = await supabase
 			.from("quiz_sessions")
 			.select("id, is_completed")
@@ -83,12 +84,17 @@ export async function saveQuizResponse(data: QuizResponseData) {
 			throw new Error(`Database error: ${checkError.message}`);
 		}
 
+		// Guard-prefix anonymous_user_id
+		const ensuredAnonymousId = data.anonymous_user_id?.trim()
+			? (data.anonymous_user_id.startsWith('user_') ? data.anonymous_user_id : `user_${data.anonymous_user_id}`)
+			: null;
+
 		const sessionData = {
 			session_id: data.session_id,
 			total_questions: data.total_questions,
 			correct_answers: data.correct_answers,
 			device_fingerprint: data.device_fingerprint || null,
-			anonymous_user_id: data.anonymous_user_id || null,
+			anonymous_user_id: ensuredAnonymousId,
 			completed_at: new Date().toISOString(),
 			is_completed: true,
 			total_summary_score: Math.round((data.correct_answers / data.total_questions) * 100)
@@ -97,13 +103,11 @@ export async function saveQuizResponse(data: QuizResponseData) {
 		let result;
 
 		if (existingSession) {
-			// Update existing session
 			result = await supabase
 				.from("quiz_sessions")
 				.update(sessionData)
 				.eq("id", existingSession.id);
 		} else {
-			// Insert new session
 			result = await supabase
 				.from("quiz_sessions")
 				.insert([sessionData]);

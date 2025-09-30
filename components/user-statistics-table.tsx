@@ -33,7 +33,7 @@ export function UserStatisticsTable({ initialData = [] }: UserStatisticsTablePro
   const [summary, setSummary] = useState<any>(null);
   const [filters, setFilters] = useState<UserStatisticsFilters>({
     date_from: '2025-09-01',
-    date_to: '2025-09-20',
+    date_to: '2025-09-24',
     limit: 20,
     offset: 0
   });
@@ -100,7 +100,7 @@ export function UserStatisticsTable({ initialData = [] }: UserStatisticsTablePro
         <CardHeader>
           <CardTitle>ข้อมูลผู้ใช้</CardTitle>
           <CardDescription>
-            รายละเอียดการใช้งานช่วง 1-20 กันยายน 2025 ({data.length} รายการ)
+            รายละเอียดการใช้งานช่วง 1-24 กันยายน 2025 ({data.length} รายการ)
           </CardDescription>
         </CardHeader>
         <CardContent>

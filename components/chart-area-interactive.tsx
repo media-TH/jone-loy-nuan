@@ -59,7 +59,7 @@ export function ChartAreaInteractive({ analytics }: ChartAreaInteractiveProps) {
   }, [isMobile])
 
   const filteredData = React.useMemo(() => {
-    // Fixed date range: Sep 1, 2025 to Sep 24, 2025
+    // Fixed date range: Sep 1, 2025 to Sep 28, 2025
     const start = new Date("2025-09-01T00:00:00Z")
     const end = new Date("2025-09-24T00:00:00Z")
     
@@ -85,7 +85,7 @@ export function ChartAreaInteractive({ analytics }: ChartAreaInteractiveProps) {
       <CardHeader>
         <CardTitle>ผู้เข้าชมระบบ (Visitors) และผู้ทำแบบทดสอบ</CardTitle>
         <CardDescription>
-          <span className="hidden @[540px]/card:block">ภาพรวมช่วงเวลาวันย้อนหลัง</span>
+          <span className="hidden @[540px]/card:block">ภาพรวมช่วงเวลา 7/30/90 วันย้อนหลัง</span>
           <span className="@[540px]/card:hidden">เลือกช่วงเวลา</span>
         </CardDescription>
         <CardAction>

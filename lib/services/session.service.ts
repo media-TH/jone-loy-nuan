@@ -71,9 +71,14 @@ export const createQuizSession = async (
     const anonymousUser = getOrCreateAnonymousUser();
     const sessionId = options.sessionId || generateSessionId();
 
+    // Ensure anonymous_user_id follows the 'user_' prefix convention
+    const ensuredAnonymousId = anonymousUser.id.startsWith('user_')
+      ? anonymousUser.id
+      : `user_${anonymousUser.id}`;
+    
     const sessionData = {
       session_id: sessionId,
-      anonymous_user_id: anonymousUser.id,
+      anonymous_user_id: ensuredAnonymousId,
       total_questions: options.totalQuestions,
       completed_questions: 0,
       correct_answers: 0,
@@ -261,12 +266,15 @@ export const getActiveUserSessions = async (): Promise<{
 }> => {
   try {
     const supabase = createClient();
-    const anonymousUserId = getOrCreateAnonymousUser().id;
+    const anonymousUser = getOrCreateAnonymousUser();
+    const ensuredAnonymousId = anonymousUser.id.startsWith('user_')
+      ? anonymousUser.id
+      : `user_${anonymousUser.id}`;
 
     const { data, error } = await supabase
       .from('quiz_sessions')
       .select('*')
-      .eq('anonymous_user_id', anonymousUserId)
+      .eq('anonymous_user_id', ensuredAnonymousId)
       .eq('is_completed', false)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });

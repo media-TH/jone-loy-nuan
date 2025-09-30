@@ -3,12 +3,12 @@ import { useRouter } from "next/navigation";
 import type { Answer, QuizResult, QuestionWithAnswers } from "@/lib/types";
 import { useQuizResultStore } from "@/store/quiz-store";
 import { QuizService } from "@/lib/services/quiz.service";
+import { getOrCreateAnonymousUser } from "@/lib/services/anonymous-user.service";
 import { transformDbAnswers, isAnswerCorrect } from "@/lib/transforms/quiz.transforms";
 
 interface UseQuizProps {
     initialQuestions: QuestionWithAnswers[];
 }
-
 interface UseQuizReturn {
     // State
     currentQuestion: QuestionWithAnswers;
@@ -127,12 +127,14 @@ export function useQuiz({ initialQuestions }: UseQuizProps): UseQuizReturn {
                 const deviceInfo = QuizService.getDeviceInfo();
 
                 if (sessionId) {
+                    const anon = getOrCreateAnonymousUser();
+                    const ensuredAnonymousId = anon.id.startsWith('user_') ? anon.id : `user_${anon.id}`;
                     await QuizService.submitQuizResponse({
                         session_id: sessionId,
                         total_questions: totalQuestions,
                         correct_answers: correctAnswers,
                         device_fingerprint: deviceInfo.type,
-                        anonymous_user_id: deviceInfo.userAgent,
+                        anonymous_user_id: ensuredAnonymousId,
                     });
                 }
             } catch (err) {
@@ -152,12 +154,14 @@ export function useQuiz({ initialQuestions }: UseQuizProps): UseQuizReturn {
                     const deviceInfo = QuizService.getDeviceInfo();
 
                     if (sessionId) {
+                        const anon = getOrCreateAnonymousUser();
+                        const ensuredAnonymousId = anon.id.startsWith('user_') ? anon.id : `user_${anon.id}`;
                         await QuizService.submitQuizResponse({
                             session_id: sessionId,
                             total_questions: totalQuestions,
                             correct_answers: correctAnswers,
                             device_fingerprint: deviceInfo.type,
-                            anonymous_user_id: deviceInfo.userAgent,
+                            anonymous_user_id: ensuredAnonymousId,
                         });
                     }
                 } catch (err) {
