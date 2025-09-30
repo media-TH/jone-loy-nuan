@@ -49,7 +49,7 @@ export function SectionCards() {
 
   if (isLoading) {
     return (      
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <Card key={`kpi-${i}`} className="animate-pulse">
               <CardHeader>
@@ -67,7 +67,7 @@ export function SectionCards() {
 
   if (!kpiData || !stats) {
     return (      
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <Card key={`empty-${i}`}>
               <CardHeader>
@@ -95,7 +95,7 @@ export function SectionCards() {
 
   return (
     <div className="px-4 lg:px-6">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {KPI_CATEGORIES.map((category) => {
           const value = getKpiValue(category.key + "_percentage");
           const TrendIcon = getTrendIcon(value);
