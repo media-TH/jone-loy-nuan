@@ -18,8 +18,7 @@ export default async function Page() {
             <p className="text-muted-foreground">ภาพรวมของระบบจัดการ Quiz</p>
           </div>
         </div>
-        <SectionCards />
-        
+        <SectionCards />        
         {/* Advanced Analytics Card */}
         <div>
           <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">

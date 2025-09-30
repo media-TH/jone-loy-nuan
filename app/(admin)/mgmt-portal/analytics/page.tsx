@@ -44,9 +44,9 @@ export default async function AdvancedAnalyticsPage() {
         {/* Header */}
         <div>
           <div className="flex flex-col gap-4">
-            <h1 className="text-3xl font-bold text-foreground">Advanced Analytics</h1>
+            <h1 className="text-3xl font-bold text-foreground">วิเคราะห์ขั้นสูง</h1>
             <p className="text-muted-foreground">
-              Deep insights and performance metrics for quiz data
+              วิเคราะห์เชิงลึกและตัวชี้วัดประสิทธิภาพของข้อมูลแบบทดสอบ
             </p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default async function AdvancedAnalyticsPage() {
         <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Total Sessions</CardDescription>
+              <CardDescription>จำนวนเซสชันทั้งหมด</CardDescription>
               <CardTitle className="text-3xl font-bold tabular-nums">
                 {dashboardStats.total_sessions.toLocaleString()}
               </CardTitle>
@@ -64,7 +64,7 @@ export default async function AdvancedAnalyticsPage() {
               <div className="flex items-center gap-2 text-sm">
                 <IconUsers className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  {dashboardStats.completed_sessions} completed
+                  {dashboardStats.completed_sessions} เสร็จสิ้น
                 </span>
               </div>
             </CardContent>
@@ -72,7 +72,7 @@ export default async function AdvancedAnalyticsPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Completion Rate</CardDescription>
+              <CardDescription>อัตราการทำสำเร็จ</CardDescription>
               <CardTitle className="text-3xl font-bold tabular-nums">
                 {dashboardStats.completion_rate.toFixed(1)}%
               </CardTitle>
@@ -82,12 +82,12 @@ export default async function AdvancedAnalyticsPage() {
                 {dashboardStats.completion_rate >= 70 ? (
                   <Badge variant="outline" className="text-green-600">
                     <IconTrendingUp className="h-3 w-3 mr-1" />
-                    Good
+                    ดี
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="text-orange-600">
                     <IconTrendingDown className="h-3 w-3 mr-1" />
-                    Needs Improvement
+                    ควรปรับปรุง
                   </Badge>
                 )}
               </div>
@@ -96,7 +96,7 @@ export default async function AdvancedAnalyticsPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Average Score</CardDescription>
+              <CardDescription>คะแนนเฉลี่ย</CardDescription>
               <CardTitle className="text-3xl font-bold tabular-nums">
                 {dashboardStats.avg_score.toFixed(1)}%
               </CardTitle>
@@ -105,7 +105,7 @@ export default async function AdvancedAnalyticsPage() {
               <div className="flex items-center gap-2 text-sm">
                 <IconTarget className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  {dashboardStats.total_responses.toLocaleString()} responses
+                  {dashboardStats.total_responses.toLocaleString()} การตอบ
                 </span>
               </div>
             </CardContent>
@@ -113,7 +113,7 @@ export default async function AdvancedAnalyticsPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription>Avg Response Time</CardDescription>
+              <CardDescription>เวลาเฉลี่ยในการตอบ</CardDescription>
               <CardTitle className="text-3xl font-bold tabular-nums">
                 {dashboardStats.avg_response_time_seconds.toFixed(1)}s
               </CardTitle>
@@ -122,7 +122,7 @@ export default async function AdvancedAnalyticsPage() {
               <div className="flex items-center gap-2 text-sm">
                 <IconClock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  per question
+                  ต่อคำถาม
                 </span>
               </div>
             </CardContent>
@@ -136,9 +136,9 @@ export default async function AdvancedAnalyticsPage() {
             
             <Card>
               <CardHeader>
-                <CardTitle>KPI Category Details</CardTitle>
+                <CardTitle>รายละเอียดหมวดหมู่ KPI</CardTitle>
                 <CardDescription>
-                  Performance metrics for each category
+                  ตัวชี้วัดประสิทธิภาพแยกตามหมวดหมู่
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -151,7 +151,7 @@ export default async function AdvancedAnalyticsPage() {
                       <div className="flex-1">
                         <div className="font-medium">{kpi.display_name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {kpi.total_responses} responses • {kpi.unique_users} users
+                          {kpi.total_responses} การตอบ • {kpi.unique_users} ผู้ใช้
                         </div>
                       </div>
                       <div className="text-right">
@@ -168,7 +168,7 @@ export default async function AdvancedAnalyticsPage() {
                           </Badge>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Target: {kpi.target_percentage}%
+                          เป้าหมาย: {kpi.target_percentage}%
                         </div>
                       </div>
                     </div>
@@ -205,9 +205,9 @@ export default async function AdvancedAnalyticsPage() {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Key Insights</CardTitle>
+              <CardTitle>ข้อมูลเชิงลึกสำคัญ</CardTitle>
               <CardDescription>
-                Automated insights from the data
+                สรุปข้อมูลเชิงอัตโนมัติจากข้อมูลที่มี
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -216,9 +216,9 @@ export default async function AdvancedAnalyticsPage() {
                   <div className="flex items-start gap-3">
                     <IconChartBar className="h-5 w-5 text-blue-500 mt-0.5" />
                     <div>
-                      <div className="font-medium">Top Performing Category</div>
+                      <div className="font-medium">หมวดหมู่ที่ทำได้ดีที่สุด</div>
                       <div className="text-sm text-muted-foreground">
-                        {dashboardStats.top_performing_category} has the highest success rate
+                        {dashboardStats.top_performing_category} มีอัตราความสำเร็จสูงสุด
                       </div>
                     </div>
                   </div>
@@ -228,9 +228,9 @@ export default async function AdvancedAnalyticsPage() {
                   <div className="flex items-start gap-3">
                     <IconTarget className="h-5 w-5 text-orange-500 mt-0.5" />
                     <div>
-                      <div className="font-medium">Needs Attention</div>
+                      <div className="font-medium">ต้องให้ความสำคัญ</div>
                       <div className="text-sm text-muted-foreground">
-                        {dashboardStats.lowest_performing_category} requires improvement
+                        {dashboardStats.lowest_performing_category} จำเป็นต้องปรับปรุง
                       </div>
                     </div>
                   </div>
@@ -241,9 +241,9 @@ export default async function AdvancedAnalyticsPage() {
                     <div className="flex items-start gap-3">
                       <IconTrendingDown className="h-5 w-5 text-orange-600 mt-0.5" />
                       <div>
-                        <div className="font-medium text-orange-900">Low Completion Rate</div>
+                        <div className="font-medium text-orange-900">อัตราการทำสำเร็จต่ำ</div>
                         <div className="text-sm text-orange-700">
-                          Consider reviewing quiz difficulty or user experience
+                          ควรพิจารณาปรับความยากของแบบทดสอบหรือประสบการณ์ผู้ใช้
                         </div>
                       </div>
                     </div>
