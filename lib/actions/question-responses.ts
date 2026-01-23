@@ -264,5 +264,3 @@ export async function updateQuizSessionProgress(
 	}
 }
 
-// Export type for use in other files
-export type { QuestionResponseData };
