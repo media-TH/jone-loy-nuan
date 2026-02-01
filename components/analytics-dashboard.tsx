@@ -52,7 +52,7 @@ interface TrendRow {
 interface AnalyticsOverview {
 	kpiSummary: KpiSummaryRow[]
 	sessions: { device_type: string | null }[]
-	questionAnalysis: any[]
+	questionAnalysis: unknown[]
 	questionWrongCounts: QuestionWrongCountRow[]
 	sessionTrends: TrendRow[]
 }
@@ -62,13 +62,6 @@ const getStatusBadge = (score: number, target: number) => {
     return <Badge className="bg-green-100 text-green-800">เป้าหมายบรรลุ</Badge>
   }
   return <Badge variant="destructive">ต่ำกว่าเป้าหมาย</Badge>
-}
-
-// Optional formatter; currently not used due to missing time metric in API
-const formatTime = (ms: number) => {
-  const minutes = Math.floor(ms / 60000)
-  const seconds = Math.floor((ms % 60000) / 1000)
-  return `${minutes}m ${seconds}s`
 }
 
 export default function AnalyticsDashboard() {
@@ -87,8 +80,9 @@ export default function AnalyticsDashboard() {
       setData(json)
       setLastUpdated(new Date())
       setError(null)
-    } catch (e: any) {
-      setError(e?.message || 'โหลดข้อมูลไม่สำเร็จ')
+    } catch (e: unknown) {
+      const err = e as Error
+      setError(err?.message || 'โหลดข้อมูลไม่สำเร็จ')
     } finally {
       setLoading(false)
     }

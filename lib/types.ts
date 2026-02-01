@@ -128,12 +128,12 @@ export interface QuestionWithAnswers {
 	order_index: number;
 	question_text: string;
 	category?: string;
-	content?: any;
-	result?: any;
+	content?: Record<string, unknown>;
+	result?: Record<string, unknown>;
 	kpi_category?: string;
 	created_at: string;
 	updated_at: string;
-	answers?: Answer[];
+	answers?: (Answer | { id: string; answer_text: string; is_correct: boolean })[];
 }
 
 // --- Campaign Tracking Types ---

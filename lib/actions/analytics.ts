@@ -36,7 +36,7 @@ export type QuestionWrongCountRow = {
 }
 
 export async function getAnalyticsOverview() {
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabase = process.env.SUPABASE_SECRET_KEY
     ? createAdminClient()
     : await createClient()
 
@@ -59,7 +59,7 @@ export async function getAnalyticsOverview() {
 
     // Fallback on any select error (undefined column, RLS, etc.)
     if (error) {
-      const isUndefinedColumn = (error as any)?.code === "42703" || /device_type|column|does not exist/i.test(error.message || "")
+      const isUndefinedColumn = (error as { code?: string })?.code === "42703" || /device_type|column|does not exist/i.test(error.message || "")
       if (isUndefinedColumn || status >= 400) {
         const boundary = new Date()
         boundary.setDate(boundary.getDate() - 6)
@@ -73,7 +73,7 @@ export async function getAnalyticsOverview() {
           throw new Error(`[question_responses:fallback] ${qrError.message}`)
         }
 
-        sessions = (qrRows ?? []).map((r) => ({ device_type: (r as any).device_type }))
+        sessions = (qrRows ?? []).map((r) => ({ device_type: (r as { device_type: string | null }).device_type }))
       } else {
         throw new Error(`[quiz_sessions] ${error.message}`)
       }
@@ -94,7 +94,7 @@ export async function getAnalyticsOverview() {
   }
 
   // Wrong counts view (preferred for question analysis per new requirement)
-  const { data: wrongCounts, error: wrongCountsError } = await supabase
+  const { data: wrongCounts } = await supabase
     .from("question_wrong_counts")
     .select("*")
     .order("wrong_count", { ascending: true })

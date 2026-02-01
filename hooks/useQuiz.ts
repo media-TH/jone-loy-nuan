@@ -59,7 +59,10 @@ export function useQuiz({ initialQuestions }: UseQuizProps): UseQuizReturn {
             return () => clearTimeout(timer);
         } catch (error) {
             console.error("Error starting quiz:", error);
-            setIsQuizReady(true);
+            const timer = setTimeout(() => {
+                setIsQuizReady(true);
+            }, 0);
+            return () => clearTimeout(timer);
         }
     }, [startQuiz, initialQuestions.length]);
 
@@ -72,7 +75,7 @@ export function useQuiz({ initialQuestions }: UseQuizProps): UseQuizReturn {
         if (!currentQuestion?.answers || !Array.isArray(currentQuestion.answers)) {
             return [];
         }
-        return transformDbAnswers(currentQuestion.answers as any[]);
+        return transformDbAnswers(currentQuestion.answers);
     }, [currentQuestion]);
 
     const isCorrect = useMemo(() => {

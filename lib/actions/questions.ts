@@ -38,10 +38,10 @@ export async function fetchQuestions(search: string) {
 	}
 
 	const filteredData = search
-		? data.filter((q: QuestionRow) =>
+		? (data as QuestionRow[]).filter((q: QuestionRow) =>
 			q.question_text?.toLowerCase().includes(search.toLowerCase())
 		)
-		: data;
+		: (data as QuestionRow[]);
 
 	return (filteredData ?? []).map(toAdminDisplay);
 }
@@ -52,7 +52,7 @@ export async function fetchQuizQuestions() {
 	if (typeof window !== 'undefined') {
 		const { CacheService } = await import('@/lib/services/cache.service');
 		const cacheKey = CacheService.keys.questions();
-		const cachedQuestions = CacheService.get(cacheKey);
+		const cachedQuestions = CacheService.get<QuestionRow[]>(cacheKey);
 
 		if (cachedQuestions) {
 			return cachedQuestions;
@@ -69,7 +69,7 @@ export async function fetchQuizQuestions() {
 	}
 
 	// Sort ข้อมูลใน JS ตาม order_index
-	const sortedData = (data ?? []).sort(
+	const sortedData = (data as QuestionRow[] ?? []).sort(
 		(a: QuestionRow, b: QuestionRow) =>
 			(a.order_index ?? 0) - (b.order_index ?? 0)
 	);
@@ -97,7 +97,7 @@ export async function fetchQuestionById(id: string) {
 	}
 
 	// หาคำถามที่ต้องการ
-	const question = data?.find((q: any) => q.id === id);
+	const question = (data as QuestionRow[])?.find((q) => q.id === id);
 
 	if (!question) {
 		console.error("Question not found:", id);
@@ -125,7 +125,7 @@ export async function upsertQuestion(
 
 		// Parse answers data (JSON string from form)
 		const answersJson = formData.get("answers") as string;
-		let answers = [];
+		let answers: { text: string; isCorrect: boolean }[] = [];
 		if (answersJson) {
 			try {
 				answers = JSON.parse(answersJson);
@@ -139,7 +139,7 @@ export async function upsertQuestion(
 			throw new Error("คำถามต้องมีอย่างน้อย 2 คำตอบ");
 		}
 
-		const correctAnswers = answers.filter((a: any) => a.isCorrect);
+		const correctAnswers = answers.filter((a) => a.isCorrect);
 		if (correctAnswers.length < 1) {
 			throw new Error("คำถามต้องมีคำตอบที่ถูกต้องอย่างน้อย 1 ข้อ");
 		}
@@ -178,7 +178,7 @@ export async function upsertQuestion(
 
 		// Insert new answers
 		if (answers.length > 0 && questionId) {
-			const answersData = answers.map((answer: any) => ({
+			const answersData = answers.map((answer) => ({
 				question_id: questionId,
 				answer_text: answer.text,
 				is_correct: answer.isCorrect,
@@ -280,22 +280,28 @@ export async function getQuizzesServer(): Promise<Quiz[]> {
 	}
 
 	const quizzes: Quiz[] =
-		(questions ?? []).map((question: any) => ({
-			id: question.id,
-			question_text: question.question_text,
-			kpi_category: question.kpi_category ?? null,
-			category: question.category ?? "GENERAL",
-			order_index: question.order_index ?? null,
-			answer_count: question.answers?.length ?? 0,
-			correct_answer_id: question.answers?.find((a: any) => a.is_correct)?.id ?? null,
-			image_url: question.scenario_images?.[0]?.image_url ?? "/images/quiz-placeholder.svg",
-			is_active: true,
-			created_at: question.created_at ?? null,
-			updated_at: question.updated_at ?? null,
-			content: question.content ?? {},
-			answers: question.answers ?? [],
-			scenario_images: question.scenario_images ?? [],
-		})) || [];
+		(questions ?? []).map((question) => {
+			const q = question as Record<string, unknown>;
+			const answers = (q.answers as Array<{ id: string; answer_text: string; is_correct: boolean }> | undefined) ?? [];
+			const scenario_images = (q.scenario_images as Array<{ id: string; image_url: string; alt_text: string | null; display_order: number | null }> | undefined) ?? [];
+			
+			return {
+				id: q.id as string,
+				question_text: q.question_text as string,
+				kpi_category: (q.kpi_category as KPICategory) ?? null,
+				category: (q.category as string) ?? "GENERAL",
+				order_index: (q.order_index as number) ?? null,
+				answer_count: answers.length,
+				correct_answer_id: answers.find((a) => a.is_correct)?.id ?? null,
+				image_url: scenario_images[0]?.image_url ?? "/images/quiz-placeholder.svg",
+				is_active: true,
+				created_at: (q.created_at as string) ?? null,
+				updated_at: (q.updated_at as string) ?? null,
+				content: q.content ?? {},
+				answers: answers,
+				scenario_images: scenario_images,
+			};
+		});
 
 	return quizzes;
 }

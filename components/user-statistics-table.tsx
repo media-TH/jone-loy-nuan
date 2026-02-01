@@ -11,17 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { UserStatistic, getUserStatistics, getUserStatisticsSummary, UserStatisticsFilters } from "@/lib/actions/user-statistics";
-import { RefreshCw, Filter, Monitor, Smartphone, Tablet } from "lucide-react";
+import { Monitor, Smartphone, Tablet } from "lucide-react";
 
 interface UserStatisticsTableProps {
   initialData?: UserStatistic[];
@@ -30,8 +21,7 @@ interface UserStatisticsTableProps {
 export function UserStatisticsTable({ initialData = [] }: UserStatisticsTableProps) {
   const [data, setData] = useState<UserStatistic[]>(initialData);
   const [loading, setLoading] = useState(false);
-  const [summary, setSummary] = useState<any>(null);
-  const [filters, setFilters] = useState<UserStatisticsFilters>({
+  const [filters] = useState<UserStatisticsFilters>({
     date_from: '2025-09-01',
     date_to: '2025-09-24',
     limit: 20,
@@ -41,12 +31,8 @@ export function UserStatisticsTable({ initialData = [] }: UserStatisticsTablePro
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [statsData, summaryData] = await Promise.all([
-        getUserStatistics(filters),
-        getUserStatisticsSummary()
-      ]);
+      const statsData = await getUserStatistics(filters);
       setData(statsData);
-      setSummary(summaryData);
     } catch (error) {
       console.error('Error loading user statistics:', error);
     } finally {
@@ -76,21 +62,6 @@ export function UserStatisticsTable({ initialData = [] }: UserStatisticsTablePro
       case 'tablet': return <Tablet className="w-4 h-4" />;
       default: return <Monitor className="w-4 h-4" />;
     }
-  };
-
-  const handleFilterChange = (key: keyof UserStatisticsFilters, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value,
-      offset: 0 // Reset to first page when filtering
-    }));
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      limit: 20,
-      offset: 0
-    });
   };
 
   return (

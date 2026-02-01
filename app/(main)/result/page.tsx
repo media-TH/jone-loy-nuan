@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useQuizResultStore } from "@/store/quiz-store";
 import { RotateCcw, Home } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { getRiskAssessment } from "@/lib/transforms/quiz.transforms";
 
 export default function ResultPage() {
@@ -70,8 +70,8 @@ export default function ResultPage() {
 								</span>
 								{"imageSrc" in resultDesign && (
 									<Image
-										src={(resultDesign as any).imageSrc}
-										alt={(resultDesign as any).imageAlt}
+										src={resultDesign.imageSrc}
+										alt={resultDesign.imageAlt}
 										width={200}
 										height={200}
 										className="w-48 h-48 sm:w-56 sm:h-56 rounded-xl object-contain"

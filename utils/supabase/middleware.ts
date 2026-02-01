@@ -10,7 +10,7 @@ export async function updateSession(request: NextRequest) {
 
 	try {
 		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-		const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+		const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 		// If env variables are missing simply skip the session handling
 		if (!supabaseUrl || !supabaseKey) {
@@ -64,7 +64,7 @@ export async function updateSession(request: NextRequest) {
 
 		// Get user session for authentication check
 		const { data: { user }, error } = await supabase.auth.getUser();
-		
+
 		// Check if accessing admin routes
 		const isAdminRoute = request.nextUrl.pathname.startsWith('/mgmt-portal');
 
@@ -78,14 +78,14 @@ export async function updateSession(request: NextRequest) {
 		}
 	} catch (error) {
 		console.error("[middleware] updateSession error", error);
-		
+
 		// If error and accessing admin routes, redirect to login
 		if (request.nextUrl.pathname.startsWith('/mgmt-portal')) {
 			const loginUrl = new URL('/login', request.url);
 			loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
 			return NextResponse.redirect(loginUrl);
 		}
-		
+
 		// Return the original response even if session fetch fails for non-admin routes
 		return response;
 	}

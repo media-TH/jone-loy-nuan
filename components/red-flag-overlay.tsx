@@ -16,7 +16,8 @@ export function RedFlagOverlay({ show, questionOrderIndex = 1 }: RedFlagOverlayP
 	const { redFlagVariants, noteVariants } = usePinScenarioAnimations(show);
 
 	useEffect(() => {
-		setMounted(true);
+		const timer = setTimeout(() => setMounted(true), 0);
+		return () => clearTimeout(timer);
 	}, []);
 
 	// Only show for question 1 (PIN scenario)

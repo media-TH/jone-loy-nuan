@@ -82,15 +82,18 @@ const createNewAnonymousUser = (): AnonymousUserInfo => {
 /**
  * Validate anonymous user data structure
  */
-const validateAnonymousUser = (user: any): user is AnonymousUserInfo => {
+const validateAnonymousUser = (user: unknown): user is AnonymousUserInfo => {
+  const u = user as Partial<AnonymousUserInfo> | null;
   return (
-    user &&
-    typeof user.id === 'string' &&
-    user.id.startsWith(ID_PREFIX) &&
-    typeof user.created_at === 'string' &&
-    user.device_info &&
-    typeof user.device_info.type === 'string' &&
-    ['mobile', 'tablet', 'desktop'].includes(user.device_info.type)
+    u !== null &&
+    typeof u === 'object' &&
+    typeof u.id === 'string' &&
+    u.id.startsWith(ID_PREFIX) &&
+    typeof u.created_at === 'string' &&
+    typeof u.device_info === 'object' &&
+    u.device_info !== null &&
+    typeof u.device_info.type === 'string' &&
+    ['mobile', 'tablet', 'desktop'].includes(u.device_info.type)
   );
 };
 

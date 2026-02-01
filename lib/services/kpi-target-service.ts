@@ -215,7 +215,7 @@ export class KPICalculationUtils {
         });
 
         // Calculate averages
-        const result: Record<KPICategory, { averageScore: number; sessionCount: number }> = {} as any;
+        const result = {} as Record<KPICategory, { averageScore: number; sessionCount: number }>;
         Object.entries(aggregation).forEach(([category, data]) => {
             result[category as KPICategory] = {
                 averageScore: data.sessionCount > 0 ? data.totalScore / data.sessionCount : 0,

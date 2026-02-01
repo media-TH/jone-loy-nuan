@@ -59,7 +59,7 @@ export interface SessionUpdateData {
 // --- Service Class ---
 
 export class QuizService {
-  private static pendingSubmissions = new Map<string, Promise<any>>();
+  private static pendingSubmissions = new Map<string, Promise<void>>();
   private static submittedSessions = new Set<string>();
   private static readonly MAX_RETRIES = 3;
   private static readonly RETRY_DELAY = 1000;
@@ -123,12 +123,13 @@ export class QuizService {
         session: data as QuizSessionData
       };
 
-    } catch (error: any) {
-      console.error('[QuizService] Create session error:', error.message);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('[QuizService] Create session error:', err.message);
       // This catch block now correctly handles errors thrown from the try block
       return {
         success: false,
-        message: error.message || 'Failed to create session'
+        message: err.message || 'Failed to create session'
       };
     }
   }
@@ -198,11 +199,12 @@ export class QuizService {
         session: data
       };
 
-    } catch (error: any) {
-      console.error('[QuizService] Complete session error:', error.message);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('[QuizService] Complete session error:', err.message);
       return {
         success: false,
-        message: error.message || 'Failed to complete session'
+        message: err.message || 'Failed to complete session'
       };
     }
   }
@@ -310,7 +312,7 @@ export class QuizService {
     maxRetries: number = 3,
     delay: number = 100
   ): Promise<T> {
-    let lastError: any;
+    let lastError: unknown;
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await action();

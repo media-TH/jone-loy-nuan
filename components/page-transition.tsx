@@ -9,10 +9,15 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
 	const [isReady, setIsReady] = useState(false);
 	const [showOverlay, setShowOverlay] = useState(true);
 
-	useEffect(() => {
+	const [prevPathname, setPrevPathname] = useState(pathname);
+
+	if (pathname !== prevPathname) {
+		setPrevPathname(pathname);
 		setIsReady(false);
 		setShowOverlay(true);
+	}
 
+	useEffect(() => {
 		// ถ้าเป็นหน้าแรก ให้รอ landing animation จบก่อน
 		const isHomePage = pathname === "/";
 		const delay = isHomePage ? 0 : 1000; // หน้าแรกไม่ delay, หน้าอื่นรอ 1 วินาที

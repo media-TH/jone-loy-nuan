@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { surveySchema } from "@/lib/schema";
 import { ZodError } from "zod";
 
-export async function submitSurveyAction(prevState: any, formData: FormData) {
+export async function submitSurveyAction(prevState: unknown, formData: FormData) {
 	try {
 		const rawData = Object.fromEntries(formData.entries());
 
@@ -39,13 +39,14 @@ export async function submitSurveyAction(prevState: any, formData: FormData) {
 		if (error) throw error;
 
 		return { success: true, message: "ขอบคุณสำหรับการให้ข้อมูล! 🎉" };
-	} catch (error: any) {
+	} catch (error: unknown) {
 		if (error instanceof ZodError) {
 			return {
 				success: false,
 				message: error.errors.map((e) => e.message).join(", "),
 			};
 		}
-		return { success: false, message: error?.message || "เกิดข้อผิดพลาด" };
+		const err = error as Error;
+		return { success: false, message: err?.message || "เกิดข้อผิดพลาด" };
 	}
 }

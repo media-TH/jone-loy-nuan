@@ -93,8 +93,6 @@ const NumberPadButton = ({
 }: NumberPadButtonProps) => {
 	const prefersReducedMotion = useReducedMotion();
 	const tokens = QUIZ_MOTION_TOKENS;
-	const withTransition = (transition: Record<string, unknown>) =>
-		reduceMotionTransition(prefersReducedMotion ?? false, transition);
 
 	if (variant === "empty") {
 		return <div className="h-12 sm:h-14 md:h-16" />;
@@ -164,13 +162,9 @@ export default function IntegratedPinScenario({
 
 	// Use animation hook
 	const {
-		redFlagVariants,
-		noteVariants,
 		overlayVariants,
 		containerVariants,
 		buttonsVariants,
-		showRedFlag,
-		showNote,
 		showOverlay,
 	} = usePinScenarioAnimations(answered);
 

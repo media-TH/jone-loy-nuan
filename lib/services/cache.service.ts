@@ -20,7 +20,7 @@ interface CacheConfig {
 }
 
 export class CacheService {
-    private static cache = new Map<string, CacheItem<any>>();
+    private static cache = new Map<string, CacheItem<unknown>>();
 
     // Cache TTL configuration (in milliseconds)
     private static readonly TTL: CacheConfig = {
@@ -40,7 +40,7 @@ export class CacheService {
             ttl
         };
 
-        this.cache.set(key, item);
+        this.cache.set(key, item as CacheItem<unknown>);
 
         // Auto cleanup expired items
         this.scheduleCleanup();
@@ -112,7 +112,7 @@ export class CacheService {
         const now = Date.now();
         let expired = 0;
 
-        for (const [key, item] of this.cache.entries()) {
+        for (const item of this.cache.values()) {
             if (now - item.timestamp > item.ttl) {
                 expired++;
             }

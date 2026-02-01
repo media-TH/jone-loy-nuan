@@ -4,7 +4,7 @@
 import { createClient } from "@/utils/supabase/server";
 
 export async function submitQuizSummaryAction(
-	prevState: any,
+	prevState: unknown,
 	formData: FormData
 ) {
 	try {
@@ -41,8 +41,9 @@ export async function submitQuizSummaryAction(
 		if (error) throw error;
 
 		return { success: true, message: "บันทึกผล quiz สำเร็จ!" };
-	} catch (error: any) {
-		return { success: false, message: error?.message || "เกิดข้อผิดพลาด" };
+	} catch (error: unknown) {
+		const err = error as Error;
+		return { success: false, message: err?.message || "เกิดข้อผิดพลาด" };
 	}
 }
 
@@ -120,11 +121,12 @@ export async function saveQuizResponse(data: QuizResponseData) {
 			message: "บันทึกผล quiz สำเร็จ!",
 			action: existingSession ? 'updated' : 'created'
 		};
-	} catch (error: any) {
-		console.error('[saveQuizResponse] Error:', error);
+	} catch (error: unknown) {
+		const err = error as Error;
+		console.error('[saveQuizResponse] Error:', err);
 		return {
 			success: false,
-			message: error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล"
+			message: err?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล"
 		};
 	}
 }

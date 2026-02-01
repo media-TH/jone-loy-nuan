@@ -82,11 +82,12 @@ export async function saveQuestionResponse(data: QuestionResponseData) {
 			message: "บันทึกคำตอบสำเร็จ!",
 			action: 'created'
 		};
-	} catch (error: any) {
-		console.error('[saveQuestionResponse] Error:', error);
+	} catch (error: unknown) {
+		const err = error as Error;
+		console.error('[saveQuestionResponse] Error:', err);
 		return {
 			success: false,
-			message: error?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบ"
+			message: err?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบ"
 		};
 	}
 }
@@ -139,11 +140,12 @@ export async function saveQuestionResponsesBatch(responses: QuestionResponseData
 			message: `บันทึกคำตอบ ${responses.length} ข้อสำเร็จ!`,
 			count: responses.length
 		};
-	} catch (error: any) {
-		console.error('[saveQuestionResponsesBatch] Error:', error);
+	} catch (error: unknown) {
+		const err = error as Error;
+		console.error('[saveQuestionResponsesBatch] Error:', err);
 		return {
 			success: false,
-			message: error?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบ"
+			message: err?.message || "เกิดข้อผิดพลาดในการบันทึกคำตอบ"
 		};
 	}
 }
@@ -176,10 +178,11 @@ export async function getQuestionResponses(quizSessionId: string) {
 			data: data || [],
 			message: "ดึงข้อมูลคำตอบสำเร็จ!"
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const err = error as Error;
 		return {
 			success: false,
-			message: error?.message || "เกิดข้อผิดพลาดในการดึงข้อมูลคำตอบ",
+			message: err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูลคำตอบ",
 			data: []
 		};
 	}
@@ -218,10 +221,11 @@ export async function getQuizKPISummary(quizSessionId: string) {
 			data: data,
 			message: "ดึงข้อมูล KPI สำเร็จ!"
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const err = error as Error;
 		return {
 			success: false,
-			message: error?.message || "เกิดข้อผิดพลาดในการดึงข้อมูล KPI",
+			message: err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูล KPI",
 			data: null
 		};
 	}
@@ -256,11 +260,11 @@ export async function updateQuizSessionProgress(
 			success: true,
 			message: "อัพเดตความคืบหน้าสำเร็จ!"
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const err = error as Error;
 		return {
 			success: false,
-			message: error?.message || "เกิดข้อผิดพลาดในการอัพเดตความคืบหน้า"
+			message: err?.message || "เกิดข้อผิดพลาดในการอัพเดตความคืบหน้า"
 		};
 	}
 }
-

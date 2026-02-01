@@ -50,18 +50,23 @@ export default function ImageManager({ title = "รูปภาพประก�
         .map((entry) => {
           const path = fullPath(entry.name);
           const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+          
+          // Use type assertion for Supabase storage metadata if needed, but avoid 'any'
+          const metadata = entry.metadata as Record<string, unknown> | undefined;
+          
           return {
             name: entry.name,
             path,
-            size: (entry as any).metadata?.size ?? null,
-            lastModified: (entry as any).updated_at ?? null,
+            size: (metadata?.size as number) ?? null,
+            lastModified: entry.updated_at ?? null,
             publicUrl: pub?.publicUrl ?? null,
           };
         });
       setFiles(listed);
-    } catch (e: any) {
-      console.error("List error:", e);
-      toast.error(`โหลดรายการรูปภาพไม่สำเร็จ: ${e.message ?? e}`);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      console.error("List error:", err);
+      toast.error(`โหลดรายการรูปภาพไม่สำเร็จ: ${err.message ?? err}`);
     } finally {
       setLoading(false);
     }
@@ -80,9 +85,10 @@ export default function ImageManager({ title = "รูปภาพประก�
       toast.success("อัปโหลดไฟล์สำเร็จ");
       setSelectedFile(null);
       await fetchFiles();
-    } catch (e: any) {
-      console.error("Upload error:", e);
-      toast.error(`อัปโหลดไฟล์ไม่สำเร็จ: ${e.message ?? e}`);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      console.error("Upload error:", err);
+      toast.error(`อัปโหลดไฟล์ไม่สำเร็จ: ${err.message ?? err}`);
     } finally {
       setUploading(false);
     }
@@ -95,9 +101,10 @@ export default function ImageManager({ title = "รูปภาพประก�
       if (error) throw error;
       toast.success("ลบไฟล์สำเร็จ");
       await fetchFiles();
-    } catch (e: any) {
-      console.error("Delete error:", e);
-      toast.error(`ลบไฟล์ไม่สำเร็จ: ${e.message ?? e}`);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      console.error("Delete error:", err);
+      toast.error(`ลบไฟล์ไม่สำเร็จ: ${err.message ?? err}`);
     }
   };
 

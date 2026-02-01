@@ -34,7 +34,7 @@ export function QuestionDifficultyHeatmap({ data }: QuestionDifficultyHeatmapPro
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {data.map((question, index) => (
+          {data.map((question) => (
             <div 
               key={question.question_id}
               className="flex items-center justify-between gap-4 rounded-lg border p-3 hover:bg-accent/50 transition-colors"

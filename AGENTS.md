@@ -1,40 +1,55 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `app/` contains Next.js App Router routes. Grouped routes live under `(main)` for the quiz flow and `(admin)` for management (`/mgmt-portal`).
-- `components/` holds shared UI, with shadcn/ui primitives in `components/ui/`.
-- `lib/` contains server actions, services, types, constants, and Supabase types (auto-generated in `lib/database.types.ts`).
-- `store/` is Zustand state, `hooks/` for custom hooks, `utils/` for helpers, and `supabase/` for migrations and local config.
-- Tests live in `__tests__/` (and optionally `tests/` per Jest config).
+
+- `app/`: Next.js App Router pages, layouts, and route handlers.
+- `components/`: Reusable UI components (Radix/Shadcn-style).
+- `hooks/`: Custom React hooks.
+- `lib/` and `utils/`: Shared utilities, data access, and feature helpers.
+- `store/`: Client state management (Zustand).
+- `public/`: Static assets served at the site root.
+- `supabase/`: Supabase configuration and local tooling.
+- `__tests__/`: Unit and integration tests.
 
 ## Build, Test, and Development Commands
-- `npm run dev` – start the dev server at `http://localhost:3000`.
-- `npm run build` – compile the production build.
-- `npm run start` – run the production server locally.
-- `npm run lint` – run Next.js ESLint rules.
-- `npm run type-check` – run TypeScript checks (no emit).
-- `npm run test` – run Jest suite.
-- `npm run test:watch` – watch mode for Jest.
-- `npm run test:integration` – run integration tests under `__tests__/integration`.
-- `npm run migrate` – run quiz data migration script.
-- `npm run upload:images` – upload quiz images to Supabase storage.
+
+Use `pnpm` (see `package.json`).
+
+- `pnpm dev`: Start the local Next.js dev server.
+- `pnpm build`: Create a production build.
+- `pnpm start`: Run the production server locally.
+- `pnpm lint`: Run ESLint (Next.js + TypeScript rules).
+- `pnpm type-check`: Run TypeScript type checks.
+- `pnpm test`: Run Jest test suite.
+- `pnpm test:watch`: Run Jest in watch mode.
+- `pnpm test:integration`: Run integration tests in `__tests__/integration`.
+- `pnpm migrate`: Run quiz data migration script (expects `scripts/`).
+- `pnpm upload:images`: Upload images script (expects `scripts/`).
 
 ## Coding Style & Naming Conventions
-- TypeScript everywhere; keep strict typing and prefer interfaces from `lib/types.ts`.
-- Use the path alias `@/*` for imports (e.g., `@/components/ui/button`).
-- Tailwind CSS v4 for styling; follow existing utility patterns in `app/globals.css`.
-- All user-facing text should be in Thai.
+
+- Language: TypeScript + React (Next.js 16).
+- Linting: ESLint with Next core web vitals and TypeScript config (`eslint.config.mjs`).
+- Imports: Use `@/` alias for root imports (see `tsconfig.json`).
+- Naming: Components in `PascalCase`, hooks in `useSomething` format, files match export names.
+- Formatting: No repo formatter config; follow existing file style and run `pnpm lint` before PRs.
 
 ## Testing Guidelines
-- Jest is configured with `jsdom` and setup in `jest.setup.ts`.
-- Test files should use `*.test.ts(x)` or `*.spec.ts(x)` under `__tests__/` or `tests/`.
-- Run `npm run test` before changes to quiz flow, services, or admin dashboard logic.
+
+- Framework: Jest with `jsdom` (`jest.config.js`, `jest.setup.ts`).
+- Test files: `__tests__/**/*.(test|spec).(ts|tsx|js)` or `tests/**/...`.
+- Keep tests deterministic and avoid network calls unless mocked.
 
 ## Commit & Pull Request Guidelines
-- Commit messages in history follow a lightweight convention like `feat: ...` or `fix: ...`. Keep subjects short and action-oriented.
-- PRs should include a concise summary, test commands run, and screenshots for UI changes (quiz, dashboard, or admin portal).
-- Link related issues or tasks when available.
+
+- Commits generally follow Conventional Commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
+- Keep messages short and imperative; reference the scope when helpful (e.g., `feat: add admin KPI cards`).
+- PRs should include: clear description, linked issue (if any), and screenshots for UI changes.
 
 ## Security & Configuration Tips
-- Supabase credentials live in `.env.local`. Do not commit secrets.
-- Prefer server actions in `lib/actions/` for data mutations; avoid direct client-side Supabase writes.
+
+- Supabase configuration relies on environment variables:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
+  - `SUPABASE_SECRET_KEY` (server-side only)
+- Store secrets in `.env.local` (do not commit).

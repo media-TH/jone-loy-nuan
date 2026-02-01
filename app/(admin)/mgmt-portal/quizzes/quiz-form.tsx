@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
@@ -9,7 +9,6 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
@@ -56,7 +55,7 @@ const KPI_CATEGORIES = [
 ];
 
 // Submit Button Component with useFormStatus
-function SubmitButton({ initialData }: { initialData?: any }) {
+function SubmitButton({ initialData }: { initialData?: Partial<QuestionWithAnswers> | null }) {
 	const { pending } = useFormStatus();
 	return (
 		<Button type="submit" disabled={pending}>
@@ -74,16 +73,21 @@ function SubmitButton({ initialData }: { initialData?: any }) {
 
 export function QuizUpsertForm({ initialData }: QuizUpsertFormProps) {
 	const router = useRouter();
-	const [answers, setAnswers] = useState<any[]>([]);
+	const [, setAnswers] = useState<unknown[]>([]);
 	const formRef = useRef<HTMLFormElement>(null);
 
 	// Simple initial answers parsing
-	const initialAnswers = initialData?.answers ? 
-		(Array.isArray(initialData.answers) ? initialData.answers.map((answer: any) => ({
-			id: answer.id || crypto.randomUUID(),
-			text: answer.text || answer.answer_text || "",
-			isCorrect: answer.isCorrect ?? answer.is_correct ?? false
-		})) : []) : [];
+	const initialAnswers = useMemo(() => {
+		return initialData?.answers ? 
+			(Array.isArray(initialData.answers) ? initialData.answers.map((answer, index) => {
+				const a = answer as Record<string, unknown>;
+				return {
+					id: (a.id as string) || `answer-${index}`,
+					text: (a.text as string) || (a.answer_text as string) || "",
+					isCorrect: (a.isCorrect as boolean) ?? (a.is_correct as boolean) ?? false
+				};
+			}) : []) : [];
+	}, [initialData]);
 
 	// Handle form submission with better error handling
 	const handleSubmit = async (formData: FormData) => {

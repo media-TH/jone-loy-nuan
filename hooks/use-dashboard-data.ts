@@ -8,7 +8,7 @@ export interface DashboardStats {
 	totalQuestions: number;
 	totalResponses: number;
 	averageScore: number;
-	recentQuestions: any[];
+	recentQuestions: Record<string, unknown>[];
 }
 
 export function useDashboardData() {
@@ -55,10 +55,13 @@ export function useDashboardData() {
 			}
 
 			// Sort questions by created_at and get recent 5
-			const sortedQuestions = questionsData
+			const sortedQuestions = ((questionsData || []) as Record<string, unknown>[])
 				.sort(
-					(a: any, b: any) =>
-						new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+					(a, b) => {
+						const dateA = new Date(a.created_at as string).getTime();
+						const dateB = new Date(b.created_at as string).getTime();
+						return dateB - dateA;
+					}
 				)
 				.slice(0, 5);
 

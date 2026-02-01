@@ -33,6 +33,7 @@ export function DemographicsChart({ data, groupBy }: DemographicsChartProps) {
       avg_score_percentage: number
       high_performers: number
       low_performers: number
+      count: number
     }>()
 
     data.forEach(item => {
@@ -47,11 +48,11 @@ export function DemographicsChart({ data, groupBy }: DemographicsChartProps) {
 
       grouped.set(key, {
         total_responses: existing.total_responses + item.total_responses,
-        avg_score_percentage: ((existing.avg_score_percentage * (existing as any).count) + item.avg_score_percentage) / ((existing as any).count + 1),
+        avg_score_percentage: ((existing.avg_score_percentage * existing.count) + item.avg_score_percentage) / (existing.count + 1),
         high_performers: existing.high_performers + item.high_performers,
         low_performers: existing.low_performers + item.low_performers,
-        count: (existing as any).count + 1
-      } as any)
+        count: existing.count + 1
+      })
     })
 
     return Array.from(grouped.entries()).map(([key, value]) => ({

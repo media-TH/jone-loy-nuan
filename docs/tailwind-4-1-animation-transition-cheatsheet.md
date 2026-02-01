@@ -101,6 +101,8 @@ Usage examples:
 - Animate opacity/transform; avoid animating layout (top/left/width/height) where possible.
 - Keep durations snappy (150–350ms) for UI feedback; longer (400–700ms) for page-level entrances.
 - Limit simultaneous animations to reduce jank on low-end devices.
+- Quiz flow: keep Tailwind transitions to the standard duration set (150/200/300ms)
+  and align with `lib/motion/quiz-motion.ts` tokens.
 
 ## Practical Examples
 - Button

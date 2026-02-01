@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { Cell, Pie, PieChart, Tooltip } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
 import type { DevicePlatformAnalytics } from "@/lib/actions/advanced-analytics"

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { KPITargetManager, KPICalculationUtils } from '../kpi-target-service';
-import type { KPICategory } from '../../types';
+import type { KPICategory, KPITargetStatus } from '../../types';
 
 describe('KPITargetManager', () => {
     describe('validateTargetPercentage', () => {
@@ -240,12 +240,12 @@ describe('KPICalculationUtils', () => {
 
     describe('calculateOverallCampaignScore', () => {
         it('should calculate overall campaign score from KPI statuses', () => {
-            const kpiStatuses = {
+            const kpiStatuses: Record<KPICategory, KPITargetStatus> = {
                 'SCAM_RECOGNITION': { currentRate: 0.85, targetRate: 0.8, isTargetMet: true, totalResponses: 100, category: 'SCAM_RECOGNITION' },
                 'RISK_ASSESSMENT': { currentRate: 0.75, targetRate: 0.8, isTargetMet: false, totalResponses: 100, category: 'RISK_ASSESSMENT' },
                 'PROTECTIVE_ACTIONS': { currentRate: 0.90, targetRate: 0.8, isTargetMet: true, totalResponses: 100, category: 'PROTECTIVE_ACTIONS' },
                 'RESPONSE_STRATEGIES': { currentRate: 0.70, targetRate: 0.8, isTargetMet: false, totalResponses: 100, category: 'RESPONSE_STRATEGIES' }
-            } as Record<KPICategory, any>;
+            };
 
             const score = KPICalculationUtils.calculateOverallCampaignScore(kpiStatuses);
 
@@ -254,7 +254,7 @@ describe('KPICalculationUtils', () => {
         });
 
         it('should handle empty KPI statuses', () => {
-            const score = KPICalculationUtils.calculateOverallCampaignScore({} as any);
+            const score = KPICalculationUtils.calculateOverallCampaignScore({} as Record<KPICategory, KPITargetStatus>);
             expect(score).toBe(0);
         });
     });

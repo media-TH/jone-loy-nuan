@@ -13,7 +13,7 @@ interface PerformanceMetric {
     startTime: number;
     endTime?: number;
     duration?: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 interface PerformanceStats {
@@ -31,7 +31,7 @@ export class PerformanceMonitor {
     /**
      * Start timing an operation
      */
-    static startTimer(name: string, metadata?: Record<string, any>): string {
+    static startTimer(name: string, metadata?: Record<string, unknown>): string {
         const timerId = `${name}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const startTime = performance.now();
 
@@ -67,7 +67,7 @@ export class PerformanceMonitor {
         const duration = endTime - startTime;
 
         // Find and update the metric
-        for (const [name, metrics] of this.metrics.entries()) {
+        for (const metrics of this.metrics.values()) {
             const metric = metrics.find(m => m.startTime === startTime);
             if (metric) {
                 metric.endTime = endTime;
@@ -92,7 +92,7 @@ export class PerformanceMonitor {
     static async measure<T>(
         name: string,
         fn: () => Promise<T> | T,
-        metadata?: Record<string, any>
+        metadata?: Record<string, unknown>
     ): Promise<T> {
         const timerId = this.startTimer(name, metadata);
 
@@ -209,11 +209,12 @@ export class PerformanceMonitor {
  * Decorator for measuring method performance
  */
 export function measurePerformance(name?: string) {
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
         const originalMethod = descriptor.value;
-        const metricName = name || `${target.constructor.name}.${propertyKey}`;
+        const targetName = (target as { constructor: { name: string } }).constructor.name;
+        const metricName = name || `${targetName}.${propertyKey}`;
 
-        descriptor.value = async function (...args: any[]) {
+        descriptor.value = async function (...args: unknown[]) {
             return PerformanceMonitor.measure(
                 metricName,
                 () => originalMethod.apply(this, args),

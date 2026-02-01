@@ -1,6 +1,6 @@
 /**
  * 🧪 Quiz Flow Integration Tests - Fixed Version
- * 
+ *
  * Tests the complete quiz flow from start to finish
  */
 
@@ -30,7 +30,7 @@ const createMockSupabaseClient = () => {
         rpc: jest.fn(),
     };
 
-    // Setup complete chaining - CRITICAL: Every method must return mockClient EXCEPT final methods
+    // Setup complete chaining - CRITICAL: Every method must return mockClient EXCEPT final methods   
     mockClient.from.mockReturnValue(mockClient);
     mockClient.select.mockReturnValue(mockClient);
     mockClient.insert.mockReturnValue(mockClient);
@@ -68,7 +68,7 @@ jest.mock('@/lib/services/quiz.service', () => {
             updateSession: jest.fn(),
             completeSession: jest.fn(),
             clearSubmissionCache: jest.fn(),
-            retryAction: jest.fn((fn, retries) => {
+            retryAction: jest.fn((fn, _retries) => {
                 // Simple retry implementation for testing
                 return fn();
             }),
@@ -78,7 +78,7 @@ jest.mock('@/lib/services/quiz.service', () => {
 
 describe('Quiz Flow Integration Tests', () => {
     let testSessionId: string;
-    let testQuestions: any[];
+    let testQuestions: Record<string, unknown>[];
 
     beforeEach(() => {
         // Clear all mocks
@@ -261,7 +261,7 @@ describe('Quiz Flow Integration Tests', () => {
         });
 
         it('should handle question loading errors gracefully', async () => {
-            (fetchQuizQuestions as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+            (fetchQuizQuestions as jest.Mock).mockRejectedValueOnce(new Error('Database error'));     
 
             await expect(fetchQuizQuestions()).rejects.toThrow('Database error');
         });
@@ -269,8 +269,27 @@ describe('Quiz Flow Integration Tests', () => {
 
     describe('Answer Submission', () => {
         const mockSessionUUID = 'a1b2c3d4-e5f6-7890-1234-567890abcdef';
-        let mockResponseData: any;
-        let mockQuizData: any;
+        
+        interface QuestionResponseData {
+            quiz_session_id: string;
+            question_id: string;
+            selected_answer_id: string | null;
+            is_correct: boolean;
+            response_time_ms: number;
+            kpi_category: string;
+            question_order: number;
+        }
+
+        interface QuizResponseData {
+            session_id: string;
+            total_questions: number;
+            correct_answers: number;
+            device_fingerprint?: string;
+            anonymous_user_id?: string;
+        }
+
+        let mockResponseData: QuestionResponseData;
+        let mockQuizData: QuizResponseData;
 
         beforeEach(() => {
             mockResponseData = {
@@ -420,15 +439,20 @@ describe('Quiz Flow Integration Tests', () => {
 
             // Step 2: Submit answers
             for (const question of testQuestions) {
-                const correctAnswer = question.answers.find((a: any) => a.is_correct);
+                interface TestAnswer { id: string; is_correct: boolean }
+                interface TestQuestion { id: string; answers: TestAnswer[]; kpi_category: string; order_index: number }
+                const q = question as unknown as TestQuestion;
+                const correctAnswer = q.answers.find((a) => a.is_correct);
+                if (!correctAnswer) throw new Error('No correct answer in test data');
+                
                 const responseResult = await saveQuestionResponse({
                     quiz_session_id: createdSessionId,
-                    question_id: question.id,
+                    question_id: q.id,
                     selected_answer_id: correctAnswer.id,
                     is_correct: true,
                     response_time_ms: 5000,
-                    kpi_category: question.kpi_category,
-                    question_order: question.order_index
+                    kpi_category: q.kpi_category,
+                    question_order: q.order_index
                 });
                 expect(responseResult.success).toBe(true);
             }
@@ -474,10 +498,10 @@ describe('Quiz Flow Integration Tests', () => {
             });
 
             // Mock retryAction to actually retry
-            (QuizService.retryAction as jest.Mock).mockImplementation(async (fn, maxRetries) => {
+            (QuizService.retryAction as jest.Mock).mockImplementation(async (fn, maxRetries) => {     
                 for (let i = 0; i < maxRetries; i++) {
                     try {
-                        return await fn();
+                        return await (fn as () => Promise<{ success: boolean }>)();
                     } catch (error) {
                         if (i === maxRetries - 1) throw error;
                     }

@@ -101,19 +101,6 @@ function DragHandle({ id }: { id: string }) {
   )
 }
 
-const getDifficultyColor = (difficulty: string) => {
-  switch (difficulty) {
-    case "EASY":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-    case "MEDIUM":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-    case "HARD":
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-  }
-}
-
 const getKpiColor = (category: string) => {
   switch (category) {
     case "SCAM_RECOGNITION":
@@ -292,7 +279,6 @@ function DraggableRow({ row }: { row: Row<Quiz> }) {
 export function QuizManagementTable({ initialData = [] as Quiz[] }: { initialData?: Quiz[] }) {
   const [data, setData] = React.useState<Quiz[]>(initialData)
   const [isLoading, setIsLoading] = React.useState(initialData.length === 0)
-  const [error, setError] = React.useState<string | null>(null)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -394,22 +380,6 @@ export function QuizManagementTable({ initialData = [] as Quiz[] }: { initialDat
           <div className="flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="text-muted-foreground">กำลังโหลดข้อมูลคำถาม...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="w-full flex-col justify-start gap-6">
-        <div className="flex items-center justify-center py-20">
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-destructive">เกิดข้อผิดพลาด: {error}</p>
-            <Button onClick={fetchQuizzes} variant="outline">
-              <IconRefresh className="mr-2 size-4" />
-              ลองใหม่
-            </Button>
           </div>
         </div>
       </div>

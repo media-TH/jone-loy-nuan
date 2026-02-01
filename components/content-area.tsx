@@ -1,10 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import PinScenario from "@/app/(main)/quiz/_component/pin-scenario";
 import { useQuizAnimations } from "@/hooks/useQuizAnimations";
 import type { QuestionWithAnswers } from "@/lib/types";
+import {
+	QUIZ_MOTION_TOKENS,
+	reduceMotionTransition,
+} from "@/lib/motion/quiz-motion";
 
 interface ContentAreaProps {
 	questionData: QuestionWithAnswers;
@@ -16,10 +20,11 @@ interface ContentAreaProps {
 export function ContentArea({
 	questionData,
 	showResult,
-	variant = "fullscreen",
 	onPinScenarioAnswer,
 }: ContentAreaProps) {
 	const { getContentMotionProps } = useQuizAnimations(showResult);
+	const prefersReducedMotion = useReducedMotion();
+	const tokens = QUIZ_MOTION_TOKENS;
 	// สำหรับข้อแรก (PIN Scenario)
 	if (questionData.order_index === 1) {
 		return (
@@ -57,9 +62,11 @@ export function ContentArea({
 						className="absolute inset-0"
 						animate={{
 							opacity: showResult ? 0 : 1,
-							scale: showResult ? 0.8 : 1,
+							scale: showResult ? tokens.scale.imageOut : 1,
 						}}
-						transition={{ duration: 0.6 }}
+						transition={reduceMotionTransition(prefersReducedMotion, {
+							duration: tokens.durations.slow,
+						})}
 					>
 						<Image
 							src={normalImageUrl}
@@ -75,9 +82,12 @@ export function ContentArea({
 				{resultImageUrl && showResult && (
 					<motion.div
 						className="absolute inset-0"
-						initial={{ opacity: 0, scale: 1.2 }}
+						initial={{ opacity: 0, scale: tokens.scale.imageIn }}
 						animate={{ opacity: 1, scale: 1 }}
-						transition={{ duration: 0.6, delay: 0.3 }}
+						transition={reduceMotionTransition(prefersReducedMotion, {
+							duration: tokens.durations.slow,
+							delay: tokens.delays.content,
+						})}
 					>
 						<Image
 							src={resultImageUrl}

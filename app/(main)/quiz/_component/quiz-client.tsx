@@ -5,10 +5,14 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Answer, QuizResult, QuestionWithAnswers } from "@/lib/types";
 import { useQuizResultStore } from "@/store/quiz-store";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { QuizService } from "@/lib/services/quiz.service";
 import { getOrCreateAnonymousUser } from "@/lib/services/anonymous-user.service";
 import { transformDbAnswers, isAnswerCorrect } from "@/lib/transforms/quiz.transforms";
+import {
+	QUIZ_MOTION_TOKENS,
+	reduceMotionTransition,
+} from "@/lib/motion/quiz-motion";
 
 // Components
 import { QuestionSection } from "./question-section";
@@ -23,6 +27,8 @@ export function QuizClient({
 	initialQuestions: QuestionWithAnswers[];
 }) {
 	const router = useRouter();
+	const prefersReducedMotion = useReducedMotion();
+	const tokens = QUIZ_MOTION_TOKENS;
 
 	// Zustand store hooks with error handling
 	const startQuiz = useQuizResultStore((state) => state.startQuiz);
@@ -44,7 +50,9 @@ export function QuizClient({
 			return () => clearTimeout(timer);
 		} catch (error) {
 			console.error("Error starting quiz:", error);
-			setIsQuizReady(true);
+			// Wrap in setTimeout to avoid synchronous setState in effect
+			const timer = setTimeout(() => setIsQuizReady(true), 0);
+			return () => clearTimeout(timer);
 		}
 	}, [startQuiz, initialQuestions.length]);
 
@@ -54,7 +62,7 @@ export function QuizClient({
 		if (!currentQuestion?.answers || !Array.isArray(currentQuestion.answers)) {
 			return [];
 		}
-		return transformDbAnswers(currentQuestion.answers as any[]);
+		return transformDbAnswers(currentQuestion.answers);
 	}, [currentQuestion]);
 
 	const isCorrect = useMemo(() => {
@@ -175,10 +183,13 @@ export function QuizClient({
 				<motion.div
 					className="h-[100dvh] relative flex flex-col p-4 md:p-8"
 					animate={{
-						scale: showResult ? 0.95 : 1,
+						scale: showResult ? tokens.scale.down : 1,
 						opacity: showResult ? 0.7 : 1,
 					}}
-					transition={{ duration: 1.2, ease: "easeInOut" }}
+					transition={reduceMotionTransition(prefersReducedMotion, {
+						duration: tokens.durations.background,
+						ease: tokens.easing.inOut,
+					})}
 				>
 					{/* Content Area */}
 					<div className="relative w-full h-full flex flex-col">
