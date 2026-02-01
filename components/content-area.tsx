@@ -10,6 +10,9 @@ import {
 	reduceMotionTransition,
 } from "@/lib/motion/quiz-motion";
 
+/** Content shape when question has image URLs (for content-area only). */
+type ContentWithImages = { images?: { normal?: string; result?: string } };
+
 interface ContentAreaProps {
 	questionData: QuestionWithAnswers;
 	showResult: boolean;
@@ -35,9 +38,10 @@ export function ContentArea({
 	}
 
 	// สำหรับข้ออื่นๆ (รูปภาพ) พร้อม fallback
-	const normalImageUrl = questionData.content?.images?.normal ||
+	const content = questionData.content as ContentWithImages | undefined;
+	const normalImageUrl = content?.images?.normal ??
 		`/images/scenarios/question-${questionData.order_index}/normal.svg`;
-	const resultImageUrl = questionData.content?.images?.result ||
+	const resultImageUrl = content?.images?.result ??
 		`/images/scenarios/question-${questionData.order_index}/result.svg`;
 
 	if (!normalImageUrl && !resultImageUrl) {
@@ -64,7 +68,7 @@ export function ContentArea({
 							opacity: showResult ? 0 : 1,
 							scale: showResult ? tokens.scale.imageOut : 1,
 						}}
-						transition={reduceMotionTransition(prefersReducedMotion, {
+						transition={reduceMotionTransition(prefersReducedMotion ?? false, {
 							duration: tokens.durations.slow,
 						})}
 					>
@@ -84,7 +88,7 @@ export function ContentArea({
 						className="absolute inset-0"
 						initial={{ opacity: 0, scale: tokens.scale.imageIn }}
 						animate={{ opacity: 1, scale: 1 }}
-						transition={reduceMotionTransition(prefersReducedMotion, {
+						transition={reduceMotionTransition(prefersReducedMotion ?? false, {
 							duration: tokens.durations.slow,
 							delay: tokens.delays.content,
 						})}

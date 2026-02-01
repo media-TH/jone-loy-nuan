@@ -5,6 +5,9 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import type { QuestionWithAnswers } from "@/lib/types";
 
+/** Content shape when question has image URLs (for images page only). */
+type ContentWithImages = { images?: { normal?: string; result?: string } };
+
 interface PageProps {
 	params: Promise<{ id: string }>;
 	searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -17,6 +20,10 @@ export default async function UploadImagesPage({ params }: PageProps) {
 	if (!question) {
 		return <p className="text-center p-4">Question not found.</p>;
 	}
+
+	const content = question.content as ContentWithImages | undefined;
+	const normalSrc = content?.images?.normal ?? "/placeholder.svg";
+	const resultSrc = content?.images?.result ?? "/placeholder.svg";
 
 	return (
 		<div className="max-w-4xl mx-auto p-4">
@@ -38,7 +45,7 @@ export default async function UploadImagesPage({ params }: PageProps) {
 						<h2 className="text-lg font-semibold mb-2">Normal State Image</h2>
 						<div className="border rounded-md p-2 h-64 flex items-center justify-center bg-gray-50">
 							<Image
-								src={question.content?.images?.normal || "/placeholder.svg"}
+								src={normalSrc}
 								alt="Normal state preview"
 								width={300}
 								height={200}
@@ -50,7 +57,7 @@ export default async function UploadImagesPage({ params }: PageProps) {
 						<h2 className="text-lg font-semibold mb-2">Result State Image</h2>
 						<div className="border rounded-md p-2 h-64 flex items-center justify-center bg-gray-50">
 							<Image
-								src={question.content?.images?.result || "/placeholder.svg"}
+								src={resultSrc}
 								alt="Result state preview"
 								width={300}
 								height={200}

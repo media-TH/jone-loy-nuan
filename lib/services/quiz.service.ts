@@ -8,8 +8,8 @@
  * - Error handling with retry logic
  */
 
-import { createClient } from '@/utils/supabase/client';
-import { getOrCreateAnonymousUser } from './anonymous-user.service';
+import { createClientWithAnonJwt } from '@/utils/supabase/client-with-anon-jwt';
+import { getAnonToken } from './anon-jwt.service';
 
 // --- Types ---
 
@@ -19,6 +19,8 @@ export interface QuizResponseData {
   correct_answers: number;
   device_fingerprint: string;
   anonymous_user_id: string;
+  /** Anon JWT — ส่งไป Server Action เพื่อให้ RLS ผ่าน */
+  token?: string | null;
 }
 
 export interface DeviceInfo {
@@ -85,21 +87,22 @@ export class QuizService {
   }
 
   /**
-   * Create new quiz session using RPC for immediate ID return
+   * Create new quiz session using anon JWT (Edge Function issue-anon-jwt) and RPC.
+   * Returns anonymous_user_id so store can use it for subsequent submissions.
    */
   static async createSession(options: SessionCreateOptions): Promise<{
     success: boolean;
     session?: QuizSessionData;
+    anonymous_user_id?: string;
     message?: string;
   }> {
     try {
-      const supabase = createClient();
-      const anonymousUser = getOrCreateAnonymousUser();
-      
-      // Guard-prefix anonymous_user_id
-      const ensuredAnonymousId = anonymousUser.id.startsWith('user_') 
-        ? anonymousUser.id 
-        : `user_${anonymousUser.id}`;
+      const { token, anon_user_id } = await getAnonToken();
+      const ensuredAnonymousId = anon_user_id.startsWith('user_')
+        ? anon_user_id
+        : `user_${anon_user_id}`;
+
+      const supabase = createClientWithAnonJwt(token);
 
       const { data, error } = await supabase.rpc('create_quiz_session', {
         p_session_id: options.sessionId,
@@ -110,7 +113,6 @@ export class QuizService {
       }).single();
 
       if (error) {
-        // Throw error to be caught by the calling function/test
         throw new Error(error.message);
       }
 
@@ -120,18 +122,24 @@ export class QuizService {
 
       return {
         success: true,
-        session: data as QuizSessionData
+        session: data as QuizSessionData,
+        anonymous_user_id: ensuredAnonymousId
       };
 
     } catch (error: unknown) {
       const err = error as Error;
       console.error('[QuizService] Create session error:', err.message);
-      // This catch block now correctly handles errors thrown from the try block
       return {
         success: false,
         message: err.message || 'Failed to create session'
       };
     }
+  }
+
+  /** Get Supabase client with anon JWT for quiz operations (update/complete/submit). */
+  private static async getSupabaseForQuiz() {
+    const { token } = await getAnonToken();
+    return createClientWithAnonJwt(token);
   }
 
   /**
@@ -142,7 +150,7 @@ export class QuizService {
     updateData: SessionUpdateData
   ): Promise<{ success: boolean; session?: QuizSessionData; error?: string }> {
     try {
-      const supabase = createClient();
+      const supabase = await this.getSupabaseForQuiz();
 
       const { data, error } = await supabase
         .from('quiz_sessions')
@@ -178,7 +186,7 @@ export class QuizService {
     }
   ): Promise<{ success: boolean; session?: Partial<QuizSessionData>; message?: string }> {
     try {
-      const supabase = createClient();
+      const supabase = await this.getSupabaseForQuiz();
       const { data, error } = await supabase
         .from('quiz_sessions')
         .update({
@@ -271,7 +279,7 @@ export class QuizService {
     error?: string;
   }> {
     try {
-      const supabase = createClient();
+      const supabase = await this.getSupabaseForQuiz();
 
       const { data, error } = await supabase
         .from('quiz_sessions')

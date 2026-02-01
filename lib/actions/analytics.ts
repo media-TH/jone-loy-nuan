@@ -36,7 +36,7 @@ export type QuestionWrongCountRow = {
 }
 
 export async function getAnalyticsOverview() {
-  const supabase = process.env.SUPABASE_SECRET_KEY
+  const supabase = process.env.SECRET_KEY
     ? createAdminClient()
     : await createClient()
 

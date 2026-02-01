@@ -2,6 +2,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { createServerClientWithToken } from "@/utils/supabase/server-with-token";
 
 // --- Enhanced Server Actions for Individual Response Tracking ---
 
@@ -15,6 +16,8 @@ interface QuestionResponseData {
 	question_order: number;
 	device_type?: string;
 	user_agent?: string;
+	/** Anon JWT จาก issue-anon-jwt — ส่งมาเพื่อให้ RLS ผ่าน */
+	token?: string | null;
 }
 
 /**
@@ -44,7 +47,10 @@ export async function saveQuestionResponse(data: QuestionResponseData) {
 			throw new Error("Question order must be a positive number");
 		}
 
-		const supabase = await createClient();
+		const supabase =
+			data.token?.trim()
+				? createServerClientWithToken(data.token.trim())
+				: await createClient();
 
 		// Check if response already exists (prevent duplicates)
 		const { data: existingResponse } = await supabase
@@ -115,7 +121,10 @@ export async function saveQuestionResponsesBatch(responses: QuestionResponseData
 			}
 		}
 
-		const supabase = await createClient();
+		const token = responses[0]?.token?.trim() || null;
+		const supabase = token
+			? createServerClientWithToken(token)
+			: await createClient();
 
 		// Prepare data for batch insert
 		const responseData = responses.map(response => ({

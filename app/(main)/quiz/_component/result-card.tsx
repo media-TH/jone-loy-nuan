@@ -41,7 +41,7 @@ export const ResultCard = ({
 	const prefersReducedMotion = useReducedMotion();
 	const tokens = QUIZ_MOTION_TOKENS;
 	const withTransition = (transition: Record<string, unknown>) =>
-		reduceMotionTransition(prefersReducedMotion, transition);
+		reduceMotionTransition(prefersReducedMotion ?? false, transition);
 
 	// Security & Animation State Management
 	const [isButtonLoading, setIsButtonLoading] = useState(false);
@@ -103,14 +103,12 @@ export const ResultCard = ({
 		}
 
 		if (isLastQuestion) {
-			return `${baseStyles} bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl focus:ring-emerald-300 cursor-pointer ${
-				isButtonHovered ? "scale-105 shadow-2xl" : ""
-			}`;
+			return `${baseStyles} bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl focus:ring-emerald-300 cursor-pointer ${isButtonHovered ? "scale-105 shadow-2xl" : ""
+				}`;
 		}
 
-		return `${baseStyles} bg-gradient-to-br from-[#FFD633] to-[#FFCF00] hover:from-[#FFCF00] hover:to-[#FFC700] shadow-lg hover:shadow-xl focus:ring-yellow-300 cursor-pointer ${
-			isButtonHovered ? "scale-105 shadow-2xl" : ""
-		}`;
+		return `${baseStyles} bg-gradient-to-br from-[#FFD633] to-[#FFCF00] hover:from-[#FFCF00] hover:to-[#FFC700] shadow-lg hover:shadow-xl focus:ring-yellow-300 cursor-pointer ${isButtonHovered ? "scale-105 shadow-2xl" : ""
+			}`;
 	};
 
 	return (
@@ -128,7 +126,7 @@ export const ResultCard = ({
 								disabled={!canProceed || isButtonLoading}
 								className={getButtonStyles()}
 								onMouseEnter={() => setIsButtonHovered(true)}
-									onMouseLeave={() => setIsButtonHovered(false)}
+								onMouseLeave={() => setIsButtonHovered(false)}
 								whileHover={
 									canProceed && !prefersReducedMotion
 										? { scale: tokens.scale.emphasis }
@@ -149,8 +147,8 @@ export const ResultCard = ({
 									isButtonLoading
 										? "กำลังโหลด..."
 										: isLastQuestion
-										? "ดูผลลัพธ์"
-										: "ไปข้อถัดไป"
+											? "ดูผลลัพธ์"
+											: "ไปข้อถัดไป"
 								}
 								type="button"
 							>
@@ -314,11 +312,10 @@ export const ResultCard = ({
 						>
 							{/* Decorative top border */}
 							<div
-								className={`h-1 bg-gradient-to-r ${
-									isCorrect
+								className={`h-1 bg-gradient-to-r ${isCorrect
 										? "from-emerald-400 to-emerald-500"
 										: "from-rose-400 to-rose-500"
-								}`}
+									}`}
 							/>
 
 							<div className="p-6 md:p-8 pt-8">
@@ -349,7 +346,7 @@ export const ResultCard = ({
 												})}
 											>
 												{category}
-											</motion.p>											
+											</motion.p>
 										</div>
 									</div>
 								</motion.div>
@@ -367,9 +364,8 @@ export const ResultCard = ({
 
 								{/* Security: Hide sensitive data during loading with enhanced styling */}
 								<motion.div
-									className={`h-4 md:h-6 transition-opacity duration-300 ${
-										isButtonLoading ? "opacity-50" : ""
-									}`}
+									className={`h-4 md:h-6 transition-opacity duration-300 ${isButtonLoading ? "opacity-50" : ""
+										}`}
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
 									transition={withTransition({

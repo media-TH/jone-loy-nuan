@@ -17,13 +17,13 @@ export function usePinScenarioAnimations(answered: boolean) {
 
 	const withTransition = useCallback(
 		(transition: Record<string, unknown>) =>
-			reduceMotionTransition(prefersReducedMotion, transition),
+			reduceMotionTransition(prefersReducedMotion ?? false, transition),
 		[prefersReducedMotion]
 	);
 
 	const withSpring = useCallback(
 		(transition: Record<string, unknown>) =>
-			reduceMotionSpring(prefersReducedMotion, transition),
+			reduceMotionSpring(prefersReducedMotion ?? false, transition),
 		[prefersReducedMotion]
 	);
 

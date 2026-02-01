@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import type { Answer, QuizResult, QuestionWithAnswers } from "@/lib/types";
 import { useQuizResultStore } from "@/store/quiz-store";
 import { QuizService } from "@/lib/services/quiz.service";
-import { getOrCreateAnonymousUser } from "@/lib/services/anonymous-user.service";
+import { getAnonToken } from "@/lib/services/anon-jwt.service";
 import { transformDbAnswers, isAnswerCorrect } from "@/lib/transforms/quiz.transforms";
 
 interface UseQuizProps {
@@ -123,21 +123,23 @@ export function useQuiz({ initialQuestions }: UseQuizProps): UseQuizReturn {
         if (!isLastQuestion) {
             setCurrentIndex((prevIndex) => prevIndex + 1);
         } else {
-            // Complete quiz and navigate to survey
+            // Complete quiz and navigate to survey (anon_user_id from store or anon JWT)
             try {
-                const { sessionId, responses, totalQuestions } = useQuizResultStore.getState();
+                const { sessionId, anonymousUserId, responses, totalQuestions } = useQuizResultStore.getState();
                 const correctAnswers = responses.filter((r) => r.isCorrect).length;
                 const deviceInfo = QuizService.getDeviceInfo();
 
                 if (sessionId) {
-                    const anon = getOrCreateAnonymousUser();
-                    const ensuredAnonymousId = anon.id.startsWith('user_') ? anon.id : `user_${anon.id}`;
+                    const anon = await getAnonToken();
+                    const ensuredAnonymousId =
+                        anonymousUserId ?? (anon.anon_user_id.startsWith("user_") ? anon.anon_user_id : `user_${anon.anon_user_id}`);
                     await QuizService.submitQuizResponse({
                         session_id: sessionId,
                         total_questions: totalQuestions,
                         correct_answers: correctAnswers,
                         device_fingerprint: deviceInfo.type,
                         anonymous_user_id: ensuredAnonymousId,
+                        token: anon.token,
                     });
                 }
             } catch (err) {
@@ -149,22 +151,23 @@ export function useQuiz({ initialQuestions }: UseQuizProps): UseQuizReturn {
 
     const handleReset = useCallback(() => {
         if (isLastQuestion) {
-            // Complete quiz immediately for last question
             (async () => {
                 try {
-                    const { sessionId, responses, totalQuestions } = useQuizResultStore.getState();
+                    const { sessionId, anonymousUserId, responses, totalQuestions } = useQuizResultStore.getState();
                     const correctAnswers = responses.filter((r) => r.isCorrect).length;
                     const deviceInfo = QuizService.getDeviceInfo();
 
                     if (sessionId) {
-                        const anon = getOrCreateAnonymousUser();
-                        const ensuredAnonymousId = anon.id.startsWith('user_') ? anon.id : `user_${anon.id}`;
+                        const anon = await getAnonToken();
+                        const ensuredAnonymousId =
+                            anonymousUserId ?? (anon.anon_user_id.startsWith("user_") ? anon.anon_user_id : `user_${anon.anon_user_id}`);
                         await QuizService.submitQuizResponse({
                             session_id: sessionId,
                             total_questions: totalQuestions,
                             correct_answers: correctAnswers,
                             device_fingerprint: deviceInfo.type,
                             anonymous_user_id: ensuredAnonymousId,
+                            token: anon.token,
                         });
                     }
                 } catch (err) {

@@ -1,12 +1,35 @@
 /**
  * 🔄 Quiz Transform Utilities
- * 
+ *
  * Centralized data transformation logic for quiz-related data.
  * Eliminates scattered transform code in components.
  */
 
+import type { Json } from "@/lib/database.types";
 import type { Answer, QuestionWithAnswers } from "@/lib/types";
-import { z } from 'zod';
+import { z } from "zod";
+
+/** Row shape from DB (content/result/answers as Json). */
+export type QuestionRowWithJson = Omit<QuestionWithAnswers, "content" | "result" | "answers"> & {
+  content?: Json | null;
+  result?: Json | null;
+  answers?: Json | null;
+};
+
+function jsonToRecord(value: Json | null | undefined): Record<string, unknown> | undefined {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) return undefined;
+  return value as Record<string, unknown>;
+}
+
+/** Normalize DB row (Json fields) to QuestionWithAnswers for client. */
+export function rowToQuestionWithAnswers(row: QuestionRowWithJson): QuestionWithAnswers {
+  return {
+    ...row,
+    content: jsonToRecord(row.content),
+    result: jsonToRecord(row.result),
+    answers: Array.isArray(row.answers) ? (row.answers as QuestionWithAnswers["answers"]) : undefined,
+  };
+}
 
 // สร้าง Zod schema สำหรับ validation
 const RawAnswerSchema = z.object({
@@ -69,7 +92,7 @@ export const transformQuestionWithAnswers = (
   question: QuestionWithAnswers
 ): QuestionWithAnswers & { transformedAnswers: Answer[] } => {
   let transformedAnswers: Answer[] = []
-  
+
   if (question.answers) {
     try {
       // Parse JSON ถ้าเป็น string
@@ -79,17 +102,17 @@ export const transformQuestionWithAnswers = (
       } else {
         parsedAnswers = question.answers
       }
-      
+
       // Validate กับ Zod schema
       const validatedAnswers = RawAnswerArraySchema.parse(parsedAnswers)
       transformedAnswers = validatedAnswers.map(transformAnswer)
-      
+
     } catch (error) {
       console.error('Failed to parse/validate answers:', error)
       console.error('Raw answers data:', question.answers)
     }
   }
-  
+
   return {
     ...question,
     transformedAnswers
@@ -118,7 +141,7 @@ export const calculateQuizScore = (responses: Array<{ isCorrect: boolean }>) => 
   const correctCount = responses.filter(r => r.isCorrect).length;
   const total = responses.length;
   const percentage = total > 0 ? Math.round((correctCount / total) * 100) : 0;
-  
+
   return {
     score: correctCount,
     total,
@@ -132,7 +155,7 @@ export const calculateQuizScore = (responses: Array<{ isCorrect: boolean }>) => 
  */
 export const getRiskLevel = (score: number, total: number): 'high' | 'medium' | 'low' => {
   const scoreOutOfTen = total > 0 ? Math.round((score / total) * 10) : 0;
-  
+
   if (scoreOutOfTen <= 3) return 'high';
   if (scoreOutOfTen < 9) return 'medium';
   return 'low';
@@ -144,7 +167,7 @@ export const getRiskLevel = (score: number, total: number): 'high' | 'medium' | 
 export const getRiskAssessment = (score: number, total: number) => {
   const riskLevel = getRiskLevel(score, total);
   const scoreOutOfTen = total > 0 ? Math.round((score / total) * 10) : 0;
-  
+
   const assessments = {
     high: {
       scoreLabel: `${scoreOutOfTen}/10`,

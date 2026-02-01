@@ -88,13 +88,13 @@ export const useQuizAnimations = (showResult: boolean) => {
 
 	const withTransition = useCallback(
 		(transition: Record<string, unknown>) =>
-			reduceMotionTransition(prefersReducedMotion, transition),
+			reduceMotionTransition(prefersReducedMotion ?? false, transition),
 		[prefersReducedMotion]
 	);
 
 	const withSpring = useCallback(
 		(transition: Record<string, unknown>) =>
-			reduceMotionSpring(prefersReducedMotion, transition),
+			reduceMotionSpring(prefersReducedMotion ?? false, transition),
 		[prefersReducedMotion]
 	);
 
@@ -141,10 +141,10 @@ export const useQuizAnimations = (showResult: boolean) => {
 			initial: { opacity: 1, y: 0, scale: 1 },
 			animate: showResult
 				? {
-						y: responsiveValues.yMove,
-						scale: responsiveValues.scaleDown,
-						opacity: 1,
-				  }
+					y: responsiveValues.yMove,
+					scale: responsiveValues.scaleDown,
+					opacity: 1,
+				}
 				: { y: 0, scale: 1, opacity: 1 },
 			transition: {
 				...withTransition({
@@ -205,10 +205,10 @@ export const useQuizAnimations = (showResult: boolean) => {
 				initial: { opacity: 1, y: 0 },
 				animate: showResult
 					? {
-							opacity: 1,
-							y: responsiveValues.answerPanelMove,
-							scale: responsiveValues.scaleDown,
-					  }
+						opacity: 1,
+						y: responsiveValues.answerPanelMove,
+						scale: responsiveValues.scaleDown,
+					}
 					: { opacity: 1, y: 0, scale: 1 },
 				transition: withTransition({
 					duration: tokens.durations.slow,

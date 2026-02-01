@@ -34,6 +34,17 @@ Use `pnpm` (see `package.json`).
 - Naming: Components in `PascalCase`, hooks in `useSomething` format, files match export names.
 - Formatting: No repo formatter config; follow existing file style and run `pnpm lint` before PRs.
 
+## TypeScript & Animation Code
+
+For animation code and animation-related boolean logic:
+
+- Use `any` or `Record<string, any>` for animation configs (GSAP, Framer Motion variants, CSS-in-JS).
+- Allow implicit boolean conversions; avoid strict `=== true` / `=== false` checks.
+- Don’t enforce exact property names or literal types in animation objects.
+- Prioritize flexibility over type safety in animation logic; keep strict typing for data/API boundaries.
+
+Examples: `const animate = (el: HTMLElement, config: any) => gsap.to(el, config)`; `if (isAnimating && !paused) { ... }`. Avoid strict interfaces/literal types for animation-only configs.
+
 ## Testing Guidelines
 
 - Framework: Jest with `jsdom` (`jest.config.js`, `jest.setup.ts`).
@@ -51,5 +62,5 @@ Use `pnpm` (see `package.json`).
 - Supabase configuration relies on environment variables:
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
-  - `SUPABASE_SECRET_KEY` (server-side only)
+  - `SECRET_KEY` (server-side only)
 - Store secrets in `.env.local` (do not commit).

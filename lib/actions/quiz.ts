@@ -2,6 +2,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { createServerClientWithToken } from "@/utils/supabase/server-with-token";
 
 export async function submitQuizSummaryAction(
 	prevState: unknown,
@@ -14,8 +15,11 @@ export async function submitQuizSummaryAction(
 		const correctAnswers = parseInt(rawData.correctAnswers as string) || 0;
 		const deviceType = rawData.deviceType as string;
 		const anonymousUserId = rawData.anonymousUserId as string;
+		const token = (rawData.token as string)?.trim() || null;
 
-		const supabase = await createClient();
+		const supabase = token
+			? createServerClientWithToken(token)
+			: await createClient();
 
 		// Guard-prefix anonymous_user_id
 		const ensuredAnonymousId = anonymousUserId && anonymousUserId.trim()
@@ -53,6 +57,8 @@ interface QuizResponseData {
 	correct_answers: number;
 	device_fingerprint?: string;
 	anonymous_user_id?: string;
+	/** Anon JWT จาก issue-anon-jwt — ส่งมาเพื่อให้ RLS ผ่าน (เขียนได้แค่ของตัวเอง) */
+	token?: string | null;
 }
 
 export async function saveQuizResponse(data: QuizResponseData) {
@@ -73,7 +79,10 @@ export async function saveQuizResponse(data: QuizResponseData) {
 			throw new Error("Correct answers cannot exceed total questions");
 		}
 
-		const supabase = await createClient();
+		const supabase =
+			data.token?.trim()
+				? createServerClientWithToken(data.token.trim())
+				: await createClient();
 
 		const { data: existingSession, error: checkError } = await supabase
 			.from("quiz_sessions")

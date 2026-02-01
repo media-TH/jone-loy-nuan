@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { getOrCreateAnonymousUser } from "@/lib/services/anonymous-user.service";
+import { getAnonToken } from "@/lib/services/anon-jwt.service";
 import { QuizService } from "@/lib/services/quiz.service";
 
 // --- Simplified Data Types ---
@@ -110,8 +110,8 @@ export const useQuizResultStore = create<QuizResultStore>()(
 					.then(result => {
 						if (result.success) {
 							set({
-								databaseSessionId: result.session?.id || null,
-								anonymousUserId: getOrCreateAnonymousUser().id
+								databaseSessionId: result.session?.id ?? null,
+								anonymousUserId: result.anonymous_user_id ?? null
 							});
 						} else {
 							console.error('Failed to create database session:', result.message);
@@ -265,15 +265,18 @@ export const useQuizResultStore = create<QuizResultStore>()(
 				try {
 					set({ isLoading: true });
 
-					// Prepare question responses for batch save
-					const questionResponses = state.responses.map(response => ({
+					const { token } = await getAnonToken();
+
+					// Prepare question responses for batch save (ส่ง token เพื่อให้ RLS ผ่าน)
+					const questionResponses = state.responses.map((response, index) => ({
 						quiz_session_id: state.databaseSessionId!,
 						question_id: response.questionId,
 						selected_answer_id: response.answerId,
 						is_correct: response.isCorrect,
 						response_time_ms: response.responseTimeMs,
 						kpi_category: response.kpiCategoryId,
-						question_order: response.questionOrder
+						question_order: response.questionOrder,
+						...(index === 0 && token ? { token } : {})
 					}));
 
 					// Save to question_responses (triggers will update quiz_sessions)
@@ -284,7 +287,7 @@ export const useQuizResultStore = create<QuizResultStore>()(
 						throw new Error(result.message || 'Failed to save responses');
 					}
 
-						set({ isLoading: false });
+					set({ isLoading: false });
 
 				} catch (error) {
 					console.error('[QuizStore] Failed to save quiz summary:', error);
