@@ -1,8 +1,12 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useQuizAnimations } from "@/hooks/useQuizAnimations";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+	QUIZ_MOTION_TOKENS,
+	reduceMotionTransition,
+} from "@/lib/motion/quiz-motion";
 
 interface ResultCardProps {
 	showResult: boolean;
@@ -30,7 +34,14 @@ export const ResultCard = ({
 	isLastQuestion = false,
 }: ResultCardProps) => {
 	const { getResultCardAnimation } = useQuizAnimations(showResult);
-	const resultAnimation = getResultCardAnimation();
+	const resultAnimation = useMemo(
+		() => getResultCardAnimation(),
+		[getResultCardAnimation]
+	);
+	const prefersReducedMotion = useReducedMotion();
+	const tokens = QUIZ_MOTION_TOKENS;
+	const withTransition = (transition: Record<string, unknown>) =>
+		reduceMotionTransition(prefersReducedMotion, transition);
 
 	// Security & Animation State Management
 	const [isButtonLoading, setIsButtonLoading] = useState(false);
@@ -117,12 +128,23 @@ export const ResultCard = ({
 								disabled={!canProceed || isButtonLoading}
 								className={getButtonStyles()}
 								onMouseEnter={() => setIsButtonHovered(true)}
-								onMouseLeave={() => setIsButtonHovered(false)}
-								whileHover={canProceed ? { scale: 1.05 } : {}}
-								whileTap={canProceed ? { scale: 0.95 } : {}}
-								initial={{ opacity: 0, y: -20 }}
+									onMouseLeave={() => setIsButtonHovered(false)}
+								whileHover={
+									canProceed && !prefersReducedMotion
+										? { scale: tokens.scale.emphasis }
+										: {}
+								}
+								whileTap={
+									canProceed && !prefersReducedMotion
+										? { scale: tokens.scale.down }
+										: {}
+								}
+								initial={{ opacity: 0, y: -tokens.distances.ySmall }}
 								animate={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.3, delay: 0.5 }}
+								transition={withTransition({
+									duration: tokens.durations.fast,
+									delay: tokens.delays.footer,
+								})}
 								aria-label={
 									isButtonLoading
 										? "กำลังโหลด..."
@@ -137,10 +159,12 @@ export const ResultCard = ({
 									{rippleEffect && (
 										<motion.div
 											className="absolute inset-0 bg-white rounded-full opacity-30"
-											initial={{ scale: 0 }}
-											animate={{ scale: 2 }}
+											initial={{ scale: tokens.scale.zero }}
+											animate={{ scale: tokens.scale.ripple }}
 											exit={{ opacity: 0 }}
-											transition={{ duration: 0.3 }}
+											transition={withTransition({
+												duration: tokens.durations.fast,
+											})}
 										/>
 									)}
 								</AnimatePresence>
@@ -150,10 +174,12 @@ export const ResultCard = ({
 									{animationState === "loading" ? (
 										<motion.div
 											key="loading"
-											initial={{ opacity: 0, scale: 0.5 }}
+											initial={{ opacity: 0, scale: tokens.scale.half }}
 											animate={{ opacity: 1, scale: 1 }}
-											exit={{ opacity: 0, scale: 0.5 }}
-											transition={{ duration: 0.2 }}
+											exit={{ opacity: 0, scale: tokens.scale.half }}
+											transition={withTransition({
+												duration: tokens.durations.xfast,
+											})}
 											className="relative"
 										>
 											<div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
@@ -164,11 +190,11 @@ export const ResultCard = ({
 														key={i}
 														className="w-1 h-1 bg-white rounded-full"
 														animate={{ opacity: [0.3, 1, 0.3] }}
-														transition={{
-															duration: 1,
+														transition={withTransition({
+															duration: tokens.durations.long,
 															repeat: Infinity,
-															delay: i * 0.2,
-														}}
+															delay: i * tokens.delays.base,
+														})}
 													/>
 												))}
 											</div>
@@ -176,13 +202,15 @@ export const ResultCard = ({
 									) : isLastQuestion ? (
 										<motion.div
 											key="check"
-											initial={{ opacity: 0, scale: 0.5 }}
+											initial={{ opacity: 0, scale: tokens.scale.half }}
 											animate={{
 												opacity: 1,
-												scale: isButtonHovered ? 1.1 : 1,
+												scale: isButtonHovered ? tokens.scale.iconHover : 1,
 												rotate: isButtonHovered ? [0, -10, 10, 0] : 0,
 											}}
-											transition={{ duration: 0.3 }}
+											transition={withTransition({
+												duration: tokens.durations.fast,
+											})}
 											className="relative"
 										>
 											<svg
@@ -204,20 +232,25 @@ export const ResultCard = ({
 												<motion.div
 													className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full opacity-60"
 													animate={{ scale: [0, 1, 0], opacity: [0, 1, 0] }}
-													transition={{ duration: 0.6, repeat: Infinity }}
+													transition={withTransition({
+														duration: tokens.durations.slow,
+														repeat: Infinity,
+													})}
 												/>
 											)}
 										</motion.div>
 									) : (
 										<motion.div
 											key="arrow"
-											initial={{ opacity: 0, scale: 0.5 }}
+											initial={{ opacity: 0, scale: tokens.scale.half }}
 											animate={{
 												opacity: 1,
-												scale: isButtonHovered ? 1.1 : 1,
+												scale: isButtonHovered ? tokens.scale.iconHover : 1,
 												x: isButtonHovered ? 2 : 0,
 											}}
-											transition={{ duration: 0.3 }}
+											transition={withTransition({
+												duration: tokens.durations.fast,
+											})}
 											className="relative"
 										>
 											<svg
@@ -243,9 +276,11 @@ export const ResultCard = ({
 													viewBox="0 0 24 24"
 													stroke="currentColor"
 													strokeWidth={2.5}
-													initial={{ x: -8, opacity: 0 }}
+													initial={{ x: -tokens.distances.xTiny, opacity: 0 }}
 													animate={{ x: 0, opacity: 0.3 }}
-													transition={{ duration: 0.3 }}
+													transition={withTransition({
+														duration: tokens.durations.fast,
+													})}
 												>
 													<path
 														strokeLinecap="round"
@@ -264,7 +299,9 @@ export const ResultCard = ({
 										className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-white rounded-full opacity-60"
 										initial={{ scaleX: 0 }}
 										animate={{ scaleX: isButtonHovered ? 1 : 0 }}
-										transition={{ duration: 0.3 }}
+										transition={withTransition({
+											duration: tokens.durations.fast,
+										})}
 									/>
 								)}
 							</motion.button>
@@ -291,9 +328,12 @@ export const ResultCard = ({
 											{/* Enhanced title with better typography */}
 											<motion.h2
 												className="text-xl font-bold text-[#054877] mb-2"
-												initial={{ opacity: 0, y: 10 }}
+												initial={{ opacity: 0, y: tokens.distances.yTiny }}
 												animate={{ opacity: 1, y: 0 }}
-												transition={{ delay: 0.2 }}
+												transition={withTransition({
+													delay: tokens.delays.base,
+													duration: tokens.durations.base,
+												})}
 											>
 												{getTitle()}
 											</motion.h2>
@@ -301,9 +341,12 @@ export const ResultCard = ({
 											{/* Enhanced header with gradient text */}
 											<motion.p
 												className="text-3xl font-bold bg-gradient-to-r from-[#fa4198] to-[#e91e63] bg-clip-text text-transparent"
-												initial={{ opacity: 0, scale: 0.9 }}
+												initial={{ opacity: 0, scale: tokens.scale.subtle }}
 												animate={{ opacity: 1, scale: 1 }}
-												transition={{ delay: 0.3 }}
+												transition={withTransition({
+													delay: tokens.delays.content,
+													duration: tokens.durations.base,
+												})}
 											>
 												{category}
 											</motion.p>											
@@ -329,7 +372,10 @@ export const ResultCard = ({
 									}`}
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
-									transition={{ delay: 0.8 }}
+									transition={withTransition({
+										delay: tokens.delays.late,
+										duration: tokens.durations.base,
+									})}
 								/>
 							</div>
 

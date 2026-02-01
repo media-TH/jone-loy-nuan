@@ -4,6 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useActionState, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { submitSurveyAction } from "@/lib/actions/survey";
 import { useQuizResultStore } from "@/store/quiz-store";
 import { useQuizAnimations } from "@/hooks/useQuizAnimations";
@@ -102,6 +109,7 @@ function FormField({
 }) {
 	const [isSelected, setIsSelected] = useState(false);
 	const [selectedValue, setSelectedValue] = useState("");
+	const effectiveValue = selectedValue || "not_specified";
 
 	const getStatusIcon = () => {
 		if (isSelected && selectedValue) {
@@ -134,52 +142,32 @@ function FormField({
 				<span className="text-red-500">*</span>
 			</motion.label>
 			<div className="relative">
-				<select
-					name={name}
-					id={id}
-					required
-					className={`w-full appearance-none rounded-xl border px-4 py-3 text-gray-700 shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 hover:shadow-md ${
-						isSelected && selectedValue
-							? "border-green-300 bg-green-50 focus:border-green-500 focus:ring-green-500/20"
-							: "border-gray-200 bg-white focus:border-blue-500 focus:ring-blue-500/20 hover:border-gray-300"
-					}`}
-					onChange={(e) => {
-						setSelectedValue(e.target.value);
-						setIsSelected(e.target.value !== "");
+				<input type="hidden" name={name} value={effectiveValue} />
+				<Select
+					value={selectedValue}
+					onValueChange={(value) => {
+						setSelectedValue(value);
+						setIsSelected(value !== "");
 					}}
 				>
-					<option value="" className="text-gray-400">
-						{placeholder}
-					</option>
-					{options.map((option) => (
-						<option
-							key={option.value}
-							value={option.value}
-							className="text-gray-700"
-						>
-							{option.label}
-						</option>
-					))}
-				</select>
-				<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
-					<svg
-						className={`h-4 w-4 transition-colors ${
+					<SelectTrigger
+						id={id}
+						className={`w-full rounded-xl border px-4 py-3 text-gray-700 shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 hover:shadow-md ${
 							isSelected && selectedValue
-								? "text-green-500"
-								: "text-gray-400 group-focus-within:text-blue-600"
+								? "border-green-300 bg-green-50 focus:border-green-500 focus:ring-green-500/20"
+								: "border-gray-200 bg-white focus:border-blue-500 focus:ring-blue-500/20 hover:border-gray-300"
 						}`}
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
 					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M19 9l-7 7-7-7"
-						/>
-					</svg>
-				</div>
+						<SelectValue placeholder={placeholder} />
+					</SelectTrigger>
+					<SelectContent className="max-h-[60vh]">
+						{options.map((option) => (
+							<SelectItem key={option.value} value={option.value}>
+								{option.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 		</motion.div>
 	);
@@ -213,6 +201,13 @@ export default function SurveyPage() {
 	const { getLandingPageAnimation } = useQuizAnimations(false);
 
 	const handleSkip = () => {
+		const formData = new FormData();
+		formData.set("ageGroup", "not_specified");
+		formData.set("education", "not_specified");
+		formData.set("occupation", "not_specified");
+		formData.set("totalScore", String(score || 0));
+		formData.set("totalQuestions", String(total || 10));
+		formAction(formData);
 		toast.info("ข้ามการกรอกข้อมูล", {
 			duration: 2000,
 			style: {
@@ -221,7 +216,9 @@ export default function SurveyPage() {
 				border: "none",
 			},
 		});
-		router.push("/result");
+		setTimeout(() => {
+			router.push("/result");
+		}, 300);
 	};
 
 	useEffect(() => {

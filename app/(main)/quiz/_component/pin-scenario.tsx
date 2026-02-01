@@ -1,7 +1,11 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { usePinScenarioAnimations } from "@/hooks/usePinScenarioAnimations";
+import {
+	QUIZ_MOTION_TOKENS,
+	reduceMotionTransition,
+} from "@/lib/motion/quiz-motion";
 
 // Type definitions
 interface OTPSlotProps {
@@ -34,9 +38,14 @@ const OTPSlot = ({
 	onClick,
 	hasError = false,
 }: OTPSlotProps) => {
+	const prefersReducedMotion = useReducedMotion();
+	const tokens = QUIZ_MOTION_TOKENS;
+	const withTransition = (transition: Record<string, unknown>) =>
+		reduceMotionTransition(prefersReducedMotion ?? false, transition);
+
 	return (
 		<motion.div
-			whileTap={{ scale: 0.95 }}
+			whileTap={prefersReducedMotion ? {} : { scale: tokens.scale.down }}
 			onClick={onClick}
 			className={`
         relative flex items-center justify-center
@@ -48,8 +57,8 @@ const OTPSlot = ({
 					isActive
 						? "border-blue-500 ring-2 ring-blue-100 shadow-sm"
 						: value
-						? "border-gray-400"
-						: "border-gray-300 hover:border-gray-400"
+							? "border-gray-400"
+							: "border-gray-300 hover:border-gray-400"
 				}
         ${hasError ? "border-red-500 bg-red-50" : ""}
         ${value ? "text-gray-900" : "text-gray-400"}
@@ -63,9 +72,10 @@ const OTPSlot = ({
 				<motion.div
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
+					transition={withTransition({ duration: tokens.durations.fast })}
 					className="absolute inset-0 flex items-center justify-center"
 				>
-					<div className="w-0.5 h-5 sm:h-6 md:h-7 bg-blue-500 rounded-full animate-blink" />
+					<div className="w-0.5 h-5 sm:h-6 md:h-7 bg-blue-500 rounded-full motion-safe:animate-caret-blink" />
 				</motion.div>
 			)}
 		</motion.div>
@@ -81,6 +91,11 @@ const NumberPadButton = ({
 	disabled = false,
 	variant = "number",
 }: NumberPadButtonProps) => {
+	const prefersReducedMotion = useReducedMotion();
+	const tokens = QUIZ_MOTION_TOKENS;
+	const withTransition = (transition: Record<string, unknown>) =>
+		reduceMotionTransition(prefersReducedMotion ?? false, transition);
+
 	if (variant === "empty") {
 		return <div className="h-12 sm:h-14 md:h-16" />;
 	}
@@ -106,8 +121,8 @@ const NumberPadButton = ({
 
 	return (
 		<motion.button
-			whileTap={{ scale: 0.92 }}
-			whileHover={{ scale: 1.02 }}
+			whileTap={prefersReducedMotion ? {} : { scale: tokens.scale.pressStrong }}
+			whileHover={prefersReducedMotion ? {} : { scale: tokens.scale.hover }}
 			onClick={onClick}
 			disabled={disabled}
 			className={`
@@ -136,6 +151,10 @@ export default function IntegratedPinScenario({
 	onAnswer = (isCorrect: boolean) => console.log("Answer:", isCorrect),
 	disabled = false,
 }: IntegratedPinScenarioProps) {
+	const prefersReducedMotion = useReducedMotion();
+	const tokens = QUIZ_MOTION_TOKENS;
+	const withTransition = (transition: Record<string, unknown>) =>
+		reduceMotionTransition(prefersReducedMotion ?? false, transition);
 	const [value, setValue] = useState("");
 	const [answered, setAnswered] = useState(false);
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -259,8 +278,12 @@ export default function IntegratedPinScenario({
 
 			{/* Main Container */}
 			<motion.div
-				initial={{ y: 20, opacity: 0 }}
+				initial={{ y: tokens.distances.ySmall, opacity: 0 }}
 				animate={{ y: 0, opacity: 1 }}
+				transition={withTransition({
+					duration: tokens.durations.base,
+					ease: tokens.easing.out,
+				})}
 				className="w-full bg-gradient-to-b from-gray-50 to-white rounded-2xl shadow-lg overflow-hidden border border-gray-200"
 			>
 				{/* Header */}
@@ -268,8 +291,12 @@ export default function IntegratedPinScenario({
 					{/* Red Flag and Note are now handled by RedFlagOverlay component */}
 
 					<motion.h3
-						initial={{ scale: 0.9 }}
+						initial={{ scale: tokens.scale.subtle }}
 						animate={{ scale: 1 }}
+						transition={withTransition({
+							duration: tokens.durations.fast,
+							ease: tokens.easing.out,
+						})}
 						className="text-lg sm:text-xl font-semibold text-gray-800 mb-2"
 					>
 						กรุณากรอกรหัสผ่าน
@@ -334,8 +361,8 @@ export default function IntegratedPinScenario({
 				animate="animate"
 			>
 				<motion.button
-					whileHover={{ scale: 1.02 }}
-					whileTap={{ scale: 0.98 }}
+					whileHover={prefersReducedMotion ? {} : { scale: tokens.scale.hover }}
+					whileTap={prefersReducedMotion ? {} : { scale: tokens.scale.press }}
 					onClick={handleCancel}
 					disabled={disabled || answered}
 					className="
@@ -353,8 +380,8 @@ export default function IntegratedPinScenario({
 					ไม่กรอกรหัส
 				</motion.button>
 				<motion.button
-					whileHover={{ scale: 1.02 }}
-					whileTap={{ scale: 0.98 }}
+					whileHover={prefersReducedMotion ? {} : { scale: tokens.scale.hover }}
+					whileTap={prefersReducedMotion ? {} : { scale: tokens.scale.press }}
 					onClick={handleConfirm}
 					disabled={disabled || answered}
 					className={`
@@ -377,23 +404,6 @@ export default function IntegratedPinScenario({
 					ยืนยัน
 				</motion.button>
 			</motion.div>
-
-			<style jsx>{`
-				@keyframes blink {
-					0%,
-					50% {
-						opacity: 1;
-					}
-					51%,
-					100% {
-						opacity: 0;
-					}
-				}
-
-				.animate-blink {
-					animation: blink 1s infinite;
-				}
-			`}</style>
 		</motion.div>
 	);
 }

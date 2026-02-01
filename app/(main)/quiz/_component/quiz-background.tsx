@@ -15,14 +15,29 @@ export const QuizBackground = ({
 	showResult,
 	theme = "light",
 }: QuizBackgroundProps) => {
-	const { getBackgroundAnimation } = useQuizAnimations(showResult);
+	const { getBackgroundLayers } = useQuizAnimations(showResult);
+	const { baseGradient, resultGradient, transition } =
+		getBackgroundLayers(theme);
 
 	return (
-		<motion.div
+		<div
 			className="h-[100dvh] flex flex-col relative overflow-x-hidden overflow-y-auto"
-			{...getBackgroundAnimation(theme)}
 		>
+			<motion.div
+				aria-hidden="true"
+				className="absolute inset-0 pointer-events-none"
+				style={{ background: baseGradient }}
+				animate={{ opacity: showResult ? 0 : 1 }}
+				transition={transition}
+			/>
+			<motion.div
+				aria-hidden="true"
+				className="absolute inset-0 pointer-events-none"
+				style={{ background: resultGradient }}
+				animate={{ opacity: showResult ? 1 : 0 }}
+				transition={transition}
+			/>
 			{children}
-		</motion.div>
+		</div>
 	);
 };

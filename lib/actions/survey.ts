@@ -15,9 +15,9 @@ export async function submitSurveyAction(prevState: any, formData: FormData) {
 		const totalQuestions = parseInt(rawData.totalQuestions as string) || 10;
 
 		const surveyData = {
-			ageGroup: rawData.ageGroup,
-			education: rawData.education,
-			occupation: rawData.occupation,
+			ageGroup: (rawData.ageGroup as string) || "not_specified",
+			education: (rawData.education as string) || "not_specified",
+			occupation: (rawData.occupation as string) || "not_specified",
 			totalScore,
 			totalQuestions,
 		};
