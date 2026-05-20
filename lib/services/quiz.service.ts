@@ -10,6 +10,8 @@
 
 import { createClientWithAnonJwt } from '@/utils/supabase/client-with-anon-jwt';
 import { getAnonToken } from './anon-jwt.service';
+import { mapSupabaseError } from './supabase-error';
+import type { TableRow, TableUpdate } from '@/lib/supabase/types';
 
 // --- Types ---
 
@@ -28,20 +30,7 @@ export interface DeviceInfo {
   userAgent: string;
 }
 
-export interface QuizSessionData {
-  id: string;
-  session_id: string;
-  anonymous_user_id: string;
-  total_questions: number;
-  completed_questions: number;
-  correct_answers: number;
-  device_type: string;
-  user_agent: string;
-  is_completed: boolean;
-  created_at: string;
-  expires_at: string;
-  total_summary_score: number;
-}
+export type QuizSessionData = TableRow<'quiz_sessions'>;
 
 export interface SessionCreateOptions {
   totalQuestions: number;
@@ -154,7 +143,7 @@ export class QuizService {
 
       const { data, error } = await supabase
         .from('quiz_sessions')
-        .update(updateData)
+        .update(updateData as TableUpdate<'quiz_sessions'>)
         .eq('session_id', sessionId)
         .select()
         .single();
@@ -170,7 +159,7 @@ export class QuizService {
       console.error('[QuizService] Update session error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to update session'
+        error: mapSupabaseError(error as Error, 'Failed to update session').message
       };
     }
   }

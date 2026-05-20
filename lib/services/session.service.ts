@@ -7,24 +7,10 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { getOrCreateAnonymousUser } from './anonymous-user.service';
+import { mapSupabaseError } from './supabase-error';
+import type { TableInsert, TableRow, TableUpdate } from '@/lib/supabase/types';
 
-export interface QuizSessionData {
-  id: string;
-  session_id: string;
-  anonymous_user_id: string;
-  total_questions: number;
-  completed_questions: number;
-  correct_answers: number;
-  device_type: string;
-  user_agent: string;
-  screen_resolution: string;
-  browser_info: string;
-  is_completed: boolean;
-  created_at: string;
-  expires_at: string;
-  completion_time_ms?: number;
-  total_summary_score: number;
-}
+export type QuizSessionData = TableRow<'quiz_sessions'>;
 
 export interface SessionCreateOptions {
   totalQuestions: number;
@@ -76,7 +62,7 @@ export const createQuizSession = async (
       ? anonymousUser.id
       : `user_${anonymousUser.id}`;
     
-    const sessionData = {
+    const sessionData: TableInsert<'quiz_sessions'> = {
       session_id: sessionId,
       anonymous_user_id: ensuredAnonymousId,
       total_questions: options.totalQuestions,
@@ -101,7 +87,7 @@ export const createQuizSession = async (
       console.error('[SessionService] Failed to create session:', error);
       return {
         success: false,
-        error: `Failed to create session: ${error.message}`
+        error: mapSupabaseError(error, "Failed to create session").message
       };
     }
 
@@ -140,7 +126,7 @@ export const updateQuizSession = async (
       console.error('[SessionService] Failed to update session:', error);
       return {
         success: false,
-        error: `Failed to update session: ${error.message}`
+        error: mapSupabaseError(error, "Failed to update session").message
       };
     }
 
@@ -171,7 +157,7 @@ export const completeQuizSession = async (
   try {
     const supabase = createClient();
 
-    const updateData: SessionUpdateData = {
+    const updateData: TableUpdate<'quiz_sessions'> = {
       ...completionData,
       is_completed: true
     };
@@ -187,7 +173,7 @@ export const completeQuizSession = async (
       console.error('[SessionService] Failed to complete session:', error);
       return {
         success: false,
-        error: `Failed to complete session: ${error.message}`
+        error: mapSupabaseError(error, "Failed to complete session").message
       };
     }
 
@@ -221,16 +207,10 @@ export const getQuizSession = async (
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return {
-          success: false,
-          error: 'Session not found'
-        };
-      }
-      console.error('[SessionService] Failed to get session:', error);
+      const mapped = mapSupabaseError(error, "Failed to get session");
       return {
         success: false,
-        error: `Failed to get session: ${error.message}`
+        error: mapped.message
       };
     }
 
