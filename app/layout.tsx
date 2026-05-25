@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Prompt } from "next/font/google";
 import "./globals.css";
+import { PageTransition } from "@/components/motion/PageTransition";
 
 const inter = Inter({
 	variable: "--font-inter",
@@ -106,7 +107,7 @@ export default function RootLayout({
 			<body
 				className={`${inter.variable} ${prompt.variable} font-sans antialiased`}
 			>
-				{children}
+				<PageTransition>{children}</PageTransition>
 			</body>
 		</html>
 	);

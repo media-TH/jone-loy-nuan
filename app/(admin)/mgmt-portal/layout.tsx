@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { SiteHeader } from "@/components/site-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { PageTransition } from "@/components/motion/PageTransition";
 
 
 export const dynamic = "force-dynamic";
@@ -53,7 +54,7 @@ async function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       <SidebarInset className="flex flex-col overflow-hidden">
         <SiteHeader />
         <div className="flex-1 overflow-y-auto p-6">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </div>
       </SidebarInset>
     </SidebarProvider>
