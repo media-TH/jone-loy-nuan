@@ -1,43 +1,44 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { z } from "zod"
+import { checkRateLimit } from "@/lib/api/rate-limit"
 
-type MdResponse = {
-  question_id: string
-  is_correct: boolean
-  kpi_category?: string
-  created_at?: string
-}
+const mdResponseSchema = z.object({
+  question_id: z.string().min(1),
+  is_correct: z.boolean(),
+  kpi_category: z.string().optional(),
+  created_at: z.string().optional(),
+})
 
-export async function GET() {
+const mdPayloadSchema = z.array(mdResponseSchema).min(1)
+
+export async function GET(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+  const rate = checkRateLimit(`analytics-from-md:${ip}`)
+
+  if (!rate.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+  }
+
   try {
     const filePath = path.join(process.cwd(), "quiz_response.md")
     const raw = await fs.readFile(filePath, "utf8")
 
     const codeBlocks = Array.from(raw.matchAll(/```json\s*([\s\S]*?)\s*```/g))
     if (!codeBlocks.length) {
-      return NextResponse.json(
-        {
-          error: "No JSON code block found in quiz_response.md",
-          hint: "Add a ```json ... ``` block with an array of responses",
-          example: [
-            { question_id: "q1", is_correct: true, kpi_category: "SCAM_RECOGNITION" },
-            { question_id: "q2", is_correct: false, kpi_category: "PROTECTIVE_ACTIONS" },
-          ],
-        },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "No JSON code block found in quiz_response.md" }, { status: 400 })
     }
 
     const jsonText = codeBlocks[0][1]
-    const data = JSON.parse(jsonText) as MdResponse[]
+    const parsed = JSON.parse(jsonText)
+    const data = mdPayloadSchema.parse(parsed)
 
-    // Compute wrong counts per question
     const wrongMap = new Map<string, { question_id: string; wrong_count: number; total_attempts: number }>()
     for (const r of data) {
       const q = wrongMap.get(r.question_id) || { question_id: r.question_id, wrong_count: 0, total_attempts: 0 }
       q.total_attempts += 1
-      if (r.is_correct === false) q.wrong_count += 1
+      if (!r.is_correct) q.wrong_count += 1
       wrongMap.set(r.question_id, q)
     }
 
@@ -53,7 +54,6 @@ export async function GET() {
       .sort((a, b) => (a.wrong_count || 0) - (b.wrong_count || 0))
       .slice(0, 10)
 
-    // Compute simple KPI averages per category
     const byCat = new Map<string, { correct: number; total: number }>()
     for (const r of data) {
       const key = r.kpi_category || "UNKNOWN"
@@ -77,4 +77,3 @@ export async function GET() {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
-
