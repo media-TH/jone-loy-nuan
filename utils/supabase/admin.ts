@@ -1,3 +1,4 @@
+import "server-only";
 import { createServerClient } from "@supabase/ssr"
 
 // Server-only Supabase client using the Service Role key.

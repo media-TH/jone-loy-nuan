@@ -3,6 +3,17 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { createServerClientWithToken } from "@/utils/supabase/server-with-token";
+import { z } from "zod";
+
+
+const quizSummarySchema = z.object({
+	sessionId: z.string().min(1),
+	totalQuestions: z.number().int().positive(),
+	correctAnswers: z.number().int().min(0),
+	deviceType: z.string().optional(),
+	anonymousUserId: z.string().optional(),
+	token: z.string().optional().nullable(),
+});
 
 export async function submitQuizSummaryAction(
 	prevState: unknown,
@@ -17,7 +28,16 @@ export async function submitQuizSummaryAction(
 		const anonymousUserId = rawData.anonymousUserId as string;
 		const token = (rawData.token as string)?.trim() || null;
 
-		const supabase = token
+		const payload = quizSummarySchema.parse({
+			sessionId,
+			totalQuestions,
+			correctAnswers,
+			deviceType,
+			anonymousUserId,
+			token,
+		});
+
+		const supabase = payload.token
 			? createServerClientWithToken(token)
 			: await createClient();
 
