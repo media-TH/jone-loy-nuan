@@ -46,7 +46,8 @@ export function HelpChannels({ headingId = "help-channels", className }: HelpCha
 					ถ้าถูกหลอก หรือไม่แน่ใจ
 				</h2>
 				<p className="type-body text-ink-muted">
-					หยุดโอนเงินทันที โทรหาธนาคารของคุณด้วยเบอร์ทางการ แล้วติดต่อช่องทางเหล่านี้ให้เร็วที่สุด
+					อย่าเพิ่งโอนเงินหรือให้ข้อมูลใด ๆ ถ้าโอนไปแล้ว ให้โทรหาธนาคารของคุณด้วยเบอร์ทางการ
+					และติดต่อช่องทางเหล่านี้ให้เร็วที่สุด
 				</p>
 			</div>
 			<ul className="flex flex-col gap-3">
