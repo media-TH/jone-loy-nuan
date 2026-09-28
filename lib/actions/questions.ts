@@ -1,9 +1,34 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { revalidateAllContent } from "@/lib/content/supabase-source";
 import type { Database } from "@/lib/database.types";
+import { assertAdmin } from "@/lib/security/require-admin";
 import type { KPICategory } from "@/lib/types";
+
+/**
+ * Client for content writes: the service role, behind the admin gate. The content tables allow
+ * public SELECT only (migration 10), so neither a player's anon JWT nor a signed-in non-admin
+ * (both role "authenticated") can change questions or answers. Throws when the caller is no admin.
+ */
+async function contentWriteClient() {
+	await assertAdmin();
+	return createAdminClient();
+}
+
+/**
+ * After every successful content write: the portal pages, and the content cache behind the public
+ * quiz (lib/content/supabase-source.ts), so players see the change on their next load instead of
+ * up to an hour later.
+ */
+function revalidateContent() {
+	revalidatePath("/mgmt-portal");
+	revalidatePath("/mgmt-portal/quizzes");
+	revalidateAllContent();
+	revalidatePath("/quiz");
+}
 
 // Re-use generated types from database.types.ts
 type QuestionRow =
@@ -112,10 +137,10 @@ export async function upsertQuestion(
 	previousState: { error: string } | null,
 	formData: FormData
 ) {
-	const supabase = await createClient();
 	const id = formData.get("id") as string | null;
 
 	try {
+		const supabase = await contentWriteClient();
 		// Parse question data
 		const questionData = {
 			question_text: formData.get("question_text") as string,
@@ -191,8 +216,7 @@ export async function upsertQuestion(
 			if (answersError) throw answersError;
 		}
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 
 		// Return success instead of redirecting
 		return { success: true };
@@ -206,17 +230,19 @@ export async function upsertQuestion(
 export async function deleteQuestionAction(
 	id: string
 ): Promise<{ success: boolean; error?: string }> {
-	"use server";
-	const supabase = await createClient();
-	const { error } = await supabase.from("questions").delete().eq("id", id);
+	try {
+		const supabase = await contentWriteClient();
+		const { error } = await supabase.from("questions").delete().eq("id", id);
 
-	if (error) {
-		console.error("Delete error:", error);
-		return { success: false, error: error.message };
+		if (error) {
+			console.error("Delete error:", error);
+			return { success: false, error: error.message };
+		}
+	} catch (e: unknown) {
+		return { success: false, error: (e as Error).message };
 	}
 
-	revalidatePath("/mgmt-portal");
-	revalidatePath("/mgmt-portal/quizzes");
+	revalidateContent();
 	return { success: true };
 }
 
@@ -308,8 +334,8 @@ export async function getQuizzesServer(): Promise<Quiz[]> {
 
 // Update quiz display order
 export async function updateQuizOrderAction(quizzes: Pick<Quiz, "id">[]): Promise<{ success: boolean; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		for (const [index, quiz] of quizzes.entries()) {
 			const { error } = await supabase
 				.from("questions")
@@ -318,8 +344,7 @@ export async function updateQuizOrderAction(quizzes: Pick<Quiz, "id">[]): Promis
 			if (error) throw error;
 		}
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true };
 	} catch (e: unknown) {
 		const err = e as Error;
@@ -330,8 +355,8 @@ export async function updateQuizOrderAction(quizzes: Pick<Quiz, "id">[]): Promis
 
 // Update a quiz/question row
 export async function updateQuizAction(quiz: Partial<Quiz> & { id: string }): Promise<{ success: boolean; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		const { error } = await supabase
 			.from("questions")
 			.update({
@@ -346,8 +371,7 @@ export async function updateQuizAction(quiz: Partial<Quiz> & { id: string }): Pr
 
 		if (error) throw error;
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true };
 	} catch (e: unknown) {
 		const err = e as Error;
@@ -364,8 +388,8 @@ export async function createQuizAction(quiz: {
 	order_index: number | null;
 	content?: unknown;
 }): Promise<{ success: boolean; id?: string; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		const { data, error } = await supabase
 			.from("questions")
 			.insert({
@@ -380,8 +404,7 @@ export async function createQuizAction(quiz: {
 
 		if (error) throw error;
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true, id: data?.id };
 	} catch (e: unknown) {
 		const err = e as Error;
@@ -406,8 +429,8 @@ export async function upsertAnswersAction(
 	questionId: string,
 	answers: Answer[]
 ): Promise<{ success: boolean; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		// Validate: must have at least 2 answers and at least 1 correct answer
 		if (answers.length < 2) {
 			return { success: false, error: "คำถามต้องมีอย่างน้อย 2 คำตอบ" };
@@ -442,8 +465,7 @@ export async function upsertAnswersAction(
 			if (insertError) throw insertError;
 		}
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true };
 	} catch (e: unknown) {
 		const err = e as Error;
@@ -457,8 +479,8 @@ export async function createAnswersAction(
 	questionId: string,
 	answers: Omit<Answer, "id">[]
 ): Promise<{ success: boolean; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		// Validate: must have at least 2 answers and at least 1 correct answer
 		if (answers.length < 2) {
 			return { success: false, error: "คำถามต้องมีอย่างน้อย 2 คำตอบ" };
@@ -482,8 +504,7 @@ export async function createAnswersAction(
 
 		if (error) throw error;
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true };
 	} catch (e: unknown) {
 		const err = e as Error;
@@ -497,8 +518,8 @@ export async function updateAnswerAction(
 	answerId: string,
 	answer: Partial<Answer>
 ): Promise<{ success: boolean; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		const { error } = await supabase
 			.from("answers")
 			.update({
@@ -509,8 +530,7 @@ export async function updateAnswerAction(
 
 		if (error) throw error;
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true };
 	} catch (e: unknown) {
 		const err = e as Error;
@@ -522,8 +542,8 @@ export async function updateAnswerAction(
 export async function deleteAnswerAction(
 	answerId: string
 ): Promise<{ success: boolean; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		const { error } = await supabase
 			.from("answers")
 			.delete()
@@ -531,8 +551,7 @@ export async function deleteAnswerAction(
 
 		if (error) throw error;
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true };
 	} catch (e: unknown) {
 		const err = e as Error;
@@ -549,8 +568,8 @@ export async function updateQuizWithAnswersAction(
 	quiz: Partial<Quiz> & { id: string },
 	answers: Answer[]
 ): Promise<{ success: boolean; error?: string }> {
-	const supabase = await createClient();
 	try {
+		const supabase = await contentWriteClient();
 		// Validate answers first
 		if (answers.length < 2) {
 			return { success: false, error: "คำถามต้องมีอย่างน้อย 2 คำตอบ" };
@@ -582,8 +601,7 @@ export async function updateQuizWithAnswersAction(
 			return result;
 		}
 
-		revalidatePath("/mgmt-portal");
-		revalidatePath("/mgmt-portal/quizzes");
+		revalidateContent();
 		return { success: true };
 	} catch (e: unknown) {
 		const err = e as Error;

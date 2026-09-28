@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * - "consent" purposes each get their own switch (s.19: specific, separate, freely given).
  *   Missing values read as OFF, nothing is pre-ticked and there is no "accept all", so declining
  *   takes exactly as much effort as accepting (none).
- * - The footer links the privacy notice (s.23) and says consent can be withdrawn at any time.
+ * - The footer links the privacy notice (s.23), which is also where consent is withdrawn.
  *
  * Switches are native <input type="checkbox" role="switch">: keyboard, form submission and
  * screen-reader state ("on/off") come from the platform.
@@ -122,7 +122,7 @@ function ConsentPanel({
 
 			<p className="type-body-sm border-t border-line pt-4 text-ink-muted">
 				การให้ความยินยอมเป็นทางเลือกของคุณ ไม่ยินยอมก็ยังเล่นแบบทดสอบและดูผลลัพธ์ได้ตามปกติ
-				และคุณถอนความยินยอมได้ทุกเมื่อที่หน้า{" "}
+				ถอนความยินยอมได้จากแท็บนี้ที่หน้า{" "}
 				<Link
 					href={policyHref}
 					className="focus-ring rounded-xs font-semibold text-brand underline decoration-2 underline-offset-4 hover:decoration-4"

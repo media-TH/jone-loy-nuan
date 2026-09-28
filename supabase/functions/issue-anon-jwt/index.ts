@@ -1,6 +1,9 @@
 // Edge Function: issue-anon-jwt
 // Returns JWT + anon_user_id for quiz flow. RLS ใช้ auth.jwt() ->> 'anon_user_id' ได้ต้องเซ็นด้วย Project JWT Secret.
 // Env: SECRET_KEY หรือ ANON_JWT_SECRET (ตั้งเป็น Dashboard → API → JWT Secret), TOKEN_TTL_SECONDS
+//
+// The anonymous id is ALWAYS generated here. A token proves "I am this id" to RLS and to the PDPA
+// erase / withdraw actions, so it must never be issued for an id the caller names (ADR-005).
 
 function base64UrlEncode(buf: Uint8Array): string {
   const s = btoa(String.fromCharCode(...buf));
@@ -35,6 +38,17 @@ function generateAnonId(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+const DEFAULT_TTL_SECONDS = 60 * 60 * 24;
+const MIN_TTL_SECONDS = 5 * 60;
+const MAX_TTL_SECONDS = 60 * 60 * 24;
+
+/** TOKEN_TTL_SECONDS clamped to 5 min–24 h; unset or not a number = 24 h (never a token without exp). */
+function tokenTtlSeconds(raw: string | undefined): number {
+  const parsed = raw === undefined ? NaN : Math.floor(Number(raw));
+  if (!Number.isFinite(parsed)) return DEFAULT_TTL_SECONDS;
+  return Math.min(MAX_TTL_SECONDS, Math.max(MIN_TTL_SECONDS, parsed));
+}
+
 const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW = 60 * 60;
 const rateMap = new Map<string, { count: number; windowStart: number }>();
@@ -56,7 +70,6 @@ function checkRateLimit(key: string): { allowed: boolean; remaining: number; ret
 
 Deno.serve(async (req: Request) => {
   try {
-    const url = new URL(req.url);
     if (req.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -83,27 +96,21 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    let body: { requested_anon_id?: string } = {};
-    try {
-      body = await req.json();
-    } catch {
-      body = {};
-    }
-    const anon_user_id = body.requested_anon_id?.trim() || generateAnonId();
+    // The request body is ignored on purpose: nothing the caller sends can choose the id.
+    const anon_user_id = generateAnonId();
 
-    const secret =
-      Deno.env.get("SECRET_KEY") ??
-      Deno.env.get("ANON_JWT_SECRET") ??
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // Only the project's JWT secret makes tokens PostgREST accepts. The service-role key is an API
+    // key, not a signing secret, so it is deliberately not a fallback.
+    const secret = Deno.env.get("SECRET_KEY") ?? Deno.env.get("ANON_JWT_SECRET");
     if (!secret) {
-      console.error("Missing SECRET_KEY, ANON_JWT_SECRET or SUPABASE_SERVICE_ROLE_KEY");
+      console.error("Missing SECRET_KEY or ANON_JWT_SECRET (the project JWT secret)");
       return new Response(JSON.stringify({ error: "Server misconfigured" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    const ttl = Number(Deno.env.get("TOKEN_TTL_SECONDS") ?? 60 * 60 * 24);
+    const ttl = tokenTtlSeconds(Deno.env.get("TOKEN_TTL_SECONDS"));
     const iat = nowSeconds();
     const exp = iat + ttl;
 

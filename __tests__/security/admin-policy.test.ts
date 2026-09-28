@@ -1,4 +1,4 @@
-import { evaluateAdminAccess, parseAdminAllowlist } from "@/lib/security/admin-policy";
+import { adminPolicyOptions, evaluateAdminAccess, parseAdminAllowlist } from "@/lib/security/admin-policy";
 
 const user = { id: "5b8f0c1e-1111-4a2b-9c3d-000000000001", email: "Admin@BOT.or.th" };
 
@@ -47,5 +47,23 @@ describe("evaluateAdminAccess", () => {
 			status: 403,
 			code: "forbidden",
 		});
+	});
+
+	it("fails closed when the allowlist is required but empty (production)", () => {
+		const required = { requireAllowlist: true };
+		expect(evaluateAdminAccess(user, new Set(), required)).toEqual({
+			ok: false,
+			status: 403,
+			code: "forbidden",
+		});
+		expect(evaluateAdminAccess(user, parseAdminAllowlist("admin@bot.or.th"), required)).toEqual({ ok: true });
+	});
+});
+
+describe("adminPolicyOptions", () => {
+	it("requires ADMIN_EMAILS in production only", () => {
+		expect(adminPolicyOptions({ NODE_ENV: "production" })).toEqual({ requireAllowlist: true });
+		expect(adminPolicyOptions({ NODE_ENV: "development" })).toEqual({ requireAllowlist: false });
+		expect(adminPolicyOptions({ NODE_ENV: "test" })).toEqual({ requireAllowlist: false });
 	});
 });

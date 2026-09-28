@@ -11,7 +11,7 @@ import type { Question } from "@/lib/content/types";
 import { DUR, STAGGER } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 import { AnswerList } from "./answer-list";
-import { QuestionResultSheet } from "./question-result-sheet";
+import { nextActionLabel, QuestionResultSheet } from "./question-result-sheet";
 
 const QUESTION_HEADING_ID = "quiz-question";
 
@@ -115,36 +115,51 @@ export function QuizClient({ questions }: QuizClientProps) {
 					)}
 				</section>
 
-				{/* Behind the sheet while it is open; the way on after closing it to look again. */}
+				{/*
+				  The way on after closing the sheet to look at the scenario again. Hidden (not removed)
+				  while the sheet is open, so the sheet can hand focus back to "อ่านคำอธิบาย".
+				*/}
 				{showContinueBar && (
 					<div
 						className={cn(
 							"sticky bottom-0 z-(--layer-sticky) -mx-4 mt-auto flex gap-3 border-t border-line bg-surface-raised",
 							"px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6",
+							sheet === "open" && "invisible",
 						)}
 					>
 						<Button type="button" variant="quiet" size="md" onClick={openSheet} className="shrink-0">
 							อ่านคำอธิบาย
 						</Button>
-						<Button type="button" variant="spark" size="md" block onClick={quiz.next}>
-							{quiz.isLastQuestion ? "ดูผลลัพธ์" : "ข้อต่อไป"}
-							<IconArrowRight aria-hidden stroke={2.25} />
+						<Button
+							type="button"
+							variant="spark"
+							size="md"
+							block
+							onClick={quiz.next}
+							aria-disabled={quiz.isFinishing || undefined}
+							aria-busy={quiz.isFinishing || undefined}
+							className="aria-disabled:cursor-progress aria-disabled:opacity-70"
+						>
+							{nextActionLabel(quiz.isLastQuestion, quiz.isFinishing)}
+							{!quiz.isFinishing && <IconArrowRight aria-hidden stroke={2.25} />}
 						</Button>
 					</div>
 				)}
 			</div>
 
-			{response && (
-				<QuestionResultSheet
-					question={question}
-					open={sheet === "open"}
-					isCorrect={response.isCorrect}
-					isLastQuestion={quiz.isLastQuestion}
-					isFinishing={quiz.isFinishing}
-					onNext={quiz.next}
-					onDismiss={quiz.dismissSheet}
-				/>
-			)}
+			{/*
+			  Always mounted so the sheet can play its exit: while it leaves, AnimatePresence keeps
+			  showing the answered question's content, whatever these props say by then.
+			*/}
+			<QuestionResultSheet
+				question={question}
+				open={answered && sheet === "open"}
+				isCorrect={response?.isCorrect ?? false}
+				isLastQuestion={quiz.isLastQuestion}
+				isFinishing={quiz.isFinishing}
+				onNext={quiz.next}
+				onDismiss={quiz.dismissSheet}
+			/>
 		</main>
 	);
 }

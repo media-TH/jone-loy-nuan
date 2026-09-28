@@ -1,7 +1,6 @@
 "use server"
 
-import { createClient } from "@/utils/supabase/server"
-import { createAdminClient } from "@/utils/supabase/admin"
+import { adminReadClient } from "@/lib/security/require-admin"
 
 export type KpiSummaryRow = {
   scam_recognition_percentage: number | null
@@ -35,15 +34,22 @@ export type QuestionWrongCountRow = {
   wrong_rate_percentage: number | null
 }
 
+/**
+ * Only the aggregate columns the dashboard charts. quiz_kpi_summary has one row per session, and
+ * its session_id / anonymous_user_id must never leave the server (they identify a player).
+ */
+const KPI_SUMMARY_COLUMNS =
+  "scam_recognition_percentage,risk_assessment_percentage,protective_actions_percentage,response_strategies_percentage,created_at"
+
 export async function getAnalyticsOverview() {
-  const supabase = process.env.SECRET_KEY
-    ? createAdminClient()
-    : await createClient()
+  // "use server" export: callable by anyone who finds its action id, so the gate is checked here
+  // too, not only in /api/analytics/overview.
+  const supabase = await adminReadClient()
 
   // KPI summary view
   const { data: kpiSummary, error: kpiError } = await supabase
     .from("quiz_kpi_summary")
-    .select("*")
+    .select(KPI_SUMMARY_COLUMNS)
 
   if (kpiError) {
     throw new Error(`[quiz_kpi_summary] ${kpiError.message}`)

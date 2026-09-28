@@ -6,7 +6,8 @@
  *   before validation, so nothing about the person is even processed.
  * - Minimisation (s.22): an age band, never a date of birth; a province from the closed list of 77,
  *   never an address; every other field is a closed option list, never free text.
- * - Minors (s.20): anyone in an age band under 20 keeps the age band only.
+ * - Minors (s.20): for an age band under 20 every other answer is dropped unread here, and the
+ *   Server Action then stores nothing at all (their own tick is not valid consent).
  * - Sensitive data (s.26): the gender options do not ask about sexual orientation.
  */
 

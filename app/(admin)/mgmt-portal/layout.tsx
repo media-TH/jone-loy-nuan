@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { getAdminUser } from "@/lib/security/require-admin";
 import { SiteHeader } from "@/components/site-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -15,19 +15,22 @@ export default async function AdminLayout({
 }
 
 async function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-	// Middleware ตรวจสอบ auth แล้ว แต่เรายังต้องดึง user data มาแสดง
-	const supabase = await createClient();
-	const { data, error } = await supabase.auth.getUser();
+	// Same gate as the admin API routes and Server Actions (lib/security/admin-policy.ts):
+	// a signed-in account is not enough, it must be on ADMIN_EMAILS (required in production).
+	const admin = await getAdminUser();
 
-	// This should never happen due to middleware protection, but defensive programming
-	if (!data.user || error) {
+	if (!admin.ok) {
 		return (
 			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
 				<div className="text-center">
 					<h1 className="text-2xl font-bold text-gray-900 mb-4">
 						ไม่สามารถเข้าถึงได้
 					</h1>
-					<p className="text-gray-600 mb-6">กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้</p>
+					<p className="text-gray-600 mb-6">
+						{admin.code === "forbidden"
+							? "บัญชีนี้ไม่มีสิทธิ์เข้าถึงระบบจัดการ"
+							: "กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้"}
+					</p>
 					<a
 						href="/login"
 						className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"

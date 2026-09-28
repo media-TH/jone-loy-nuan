@@ -130,7 +130,7 @@ it("records consent first, then sends the answers with the session", async () =>
 	expect(mockPush).toHaveBeenCalledWith("/result");
 });
 
-it("hides the other questions for minors and sends the age band only", async () => {
+it("hides the other questions for minors and sends nothing, not even the consent", async () => {
 	act(() => radio("หญิง")?.click());
 	act(() => radio("15–19 ปี")?.click());
 
@@ -141,13 +141,9 @@ it("hides the other questions for minors and sends the age band only", async () 
 	act(() => consentSwitch()?.click());
 	await submit();
 
-	expect(sentFields()).toEqual({
-		consent_demographics: "granted",
-		ageBand: "15-19",
-		token: "header.payload.signature",
-		quizSessionId: SESSION_ID,
-		policyVersion: POLICY_VERSION,
-	});
+	expect(mockRecordConsent).not.toHaveBeenCalled();
+	expect(mockSubmit).not.toHaveBeenCalled();
+	expect(mockPush).toHaveBeenCalledWith("/result");
 });
 
 it("does not send answers when the consent could not be recorded", async () => {

@@ -54,6 +54,8 @@ type SectionId = (typeof SECTIONS)[number]["id"];
 
 const linkClass =
 	"focus-ring rounded-xs font-semibold text-brand underline decoration-2 underline-offset-4 hover:decoration-4";
+/** Links that stand on their own line (not inside a sentence) get the 44px minimum touch target. */
+const blockLinkClass = `${linkClass} inline-flex min-h-11 items-center`;
 
 /** Storage keys: plain body type in a sunken chip (mono is reserved for scam evidence). */
 const keyClass = "rounded-xs bg-surface-sunken px-1.5 py-0.5 font-sans font-semibold text-ink";
@@ -101,7 +103,7 @@ function ContactValue({ value, href }: { value: string | null; href?: string }) 
 	const text = controllerValue(value);
 	if (!value?.trim() || !href) return <>{text}</>;
 	return (
-		<a href={href} className={linkClass}>
+		<a href={href} className={blockLinkClass}>
 			{text}
 		</a>
 	);
@@ -185,7 +187,7 @@ export default function PrivacyPage() {
 		<main className="min-h-dvh bg-surface text-ink">
 			<article className="mx-auto flex w-full max-w-[40rem] flex-col gap-10 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
 				<header className="flex flex-col gap-4">
-					<Link href="/" className={`${linkClass} type-body self-start`}>
+					<Link href="/" className={`${blockLinkClass} type-body self-start`}>
 						กลับหน้าแรก
 					</Link>
 					<p className="type-label text-ink-muted">ประกาศความเป็นส่วนตัว · Privacy Notice</p>
@@ -211,8 +213,8 @@ export default function PrivacyPage() {
 						items={[
 							"เล่นได้โดยไม่ต้องสมัครสมาชิก เราไม่ถามชื่อ เบอร์โทรศัพท์ อีเมล หรือเลขประจำตัว",
 							"คำตอบของคุณผูกกับรหัสสุ่มในแท็บเบราว์เซอร์เท่านั้น",
-							"ข้อมูลประชากรเป็นทางเลือก เก็บเมื่อคุณยินยอมเท่านั้น และถอนความยินยอมได้ทุกเมื่อ",
-							"คุณลบข้อมูลของคุณเองได้ทันทีที่หน้านี้",
+							"ข้อมูลประชากรเป็นทางเลือก เก็บเมื่อคุณยินยอมเท่านั้น และไม่เก็บเลยถ้าคุณอายุต่ำกว่า 20 ปี",
+							`ถอนความยินยอมและลบข้อมูลของคุณเองได้ทันทีที่หน้านี้ จากแท็บเดียวกับที่เล่น ภายใน ${ANON_TOKEN_TTL_HOURS} ชั่วโมง`,
 							"ระบบลบหรือทำให้ข้อมูลไม่ระบุตัวตนโดยอัตโนมัติเมื่อครบกำหนด",
 							"เราไม่ขายข้อมูล ไม่ใช้ข้อมูลเพื่อโฆษณา และไม่ใช้คุกกี้ติดตามตัวคุณ",
 						]}
@@ -223,10 +225,10 @@ export default function PrivacyPage() {
 					<h2 id="toc-heading" className="type-label text-ink-muted">
 						หัวข้อในประกาศนี้
 					</h2>
-					<ol className="type-body flex list-decimal flex-col gap-2 pl-6 marker:text-ink-muted">
+					<ol className="type-body flex list-decimal flex-col pl-6 marker:text-ink-muted">
 						{SECTIONS.map((section) => (
 							<li key={section.id}>
-								<a href={`#${section.id}`} className={linkClass}>
+								<a href={`#${section.id}`} className={blockLinkClass}>
 									{section.title}
 								</a>
 							</li>
@@ -359,7 +361,7 @@ export default function PrivacyPage() {
 					<Prose>ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 คุณมีสิทธิต่อไปนี้โดยไม่มีค่าใช้จ่าย</Prose>
 					<BulletList
 						items={[
-							"ถอนความยินยอมเมื่อใดก็ได้ ง่ายเท่ากับตอนให้ โดยไม่กระทบการใช้ข้อมูลที่ทำไปแล้วโดยชอบ (มาตรา 19)",
+							"ถอนความยินยอม โดยไม่กระทบการใช้ข้อมูลที่ทำไปแล้วโดยชอบ (มาตรา 19)",
 							"ขอเข้าถึงและขอรับสำเนาข้อมูลของคุณ (มาตรา 30)",
 							"ขอรับข้อมูลในรูปแบบที่อ่านด้วยเครื่องมือทั่วไปได้ หรือขอให้ส่งต่อไปยังผู้อื่น (มาตรา 31)",
 							"คัดค้านการใช้ข้อมูลที่อาศัยฐานประโยชน์โดยชอบด้วยกฎหมาย (มาตรา 32)",
@@ -393,6 +395,12 @@ export default function PrivacyPage() {
 					<Prose>
 						ถ้าคุณเคยยินยอมให้เก็บข้อมูลประชากรในแท็บนี้ กดปุ่มด้านล่างเพื่อถอนความยินยอม
 						เราจะบันทึกการถอนและลบข้อมูลประชากรของคุณทันที ผลแบบทดสอบยังอยู่ตามปกติ
+						ปุ่มนี้ใช้ได้จากแท็บที่ใช้เล่นแบบทดสอบ ภายใน {ANON_TOKEN_TTL_HOURS} ชั่วโมง
+						หลังจากนั้นเราจับคู่ข้อมูลกับคุณไม่ได้แล้ว ติดต่อผู้ควบคุมข้อมูลตาม
+						<a href="#controller" className={linkClass}>
+							หัวข้อแรก
+						</a>{" "}
+						หรือรอให้ระบบลบเองเมื่อครบ {RETENTION.demographics.months} เดือน
 					</Prose>
 					<WithdrawConsent />
 				</Section>
@@ -457,9 +465,9 @@ export default function PrivacyPage() {
 				<Section id="minors">
 					<Prose>
 						แบบทดสอบนี้เหมาะกับทุกวัย รวมถึงเด็กและเยาวชน และเล่นได้โดยไม่ต้องให้ข้อมูลที่ระบุตัวตน
-						ถ้าคุณเลือกช่วงอายุต่ำกว่า 20 ปีในแบบสอบถาม เราจะเก็บเฉพาะช่วงอายุ
-						ไม่เก็บเพศ จังหวัด ระดับการศึกษา หรืออาชีพ (มาตรา 20)
-						ผู้ปกครองถอนความยินยอมหรือลบข้อมูลแทนได้จากหน้านี้บนอุปกรณ์เดียวกัน
+						ความยินยอมของผู้อายุต่ำกว่า 20 ปีต้องได้รับจากผู้ใช้อำนาจปกครองด้วย (มาตรา 20)
+						เราจึงไม่เก็บข้อมูลประชากรใด ๆ รวมถึงช่วงอายุ เมื่อคุณเลือกช่วงอายุต่ำกว่า 20 ปีในแบบสอบถาม
+						ผู้ปกครองลบผลแบบทดสอบแทนได้จากหน้านี้บนอุปกรณ์และแท็บเดียวกัน
 						หรือติดต่อผู้ควบคุมข้อมูลตามหัวข้อแรก
 					</Prose>
 				</Section>

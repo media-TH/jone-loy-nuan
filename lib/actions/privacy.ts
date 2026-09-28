@@ -164,7 +164,8 @@ export async function recordConsent(input: RecordConsentInput): Promise<ConsentA
 			policyVersion: POLICY_VERSION,
 			changed: logged.changed,
 			dataErased: 0,
-			message: "บันทึกความยินยอมแล้ว คุณถอนความยินยอมได้ทุกเมื่อที่หน้าประกาศความเป็นส่วนตัว",
+			message:
+				"บันทึกความยินยอมแล้ว ถ้าเปลี่ยนใจ ถอนความยินยอมได้ที่หน้าประกาศความเป็นส่วนตัวจากแท็บนี้ ก่อนปิดแท็บ",
 		};
 	} catch (error) {
 		console.error("[privacy] recordConsent failed", error);
@@ -199,7 +200,7 @@ function erasedMessage(counts: ErasureCounts): string {
 }
 
 const NO_IDENTITY_MESSAGE =
-	"ล้างข้อมูลในเบราว์เซอร์นี้แล้ว ไม่พบรหัสผู้ใช้ที่ยังใช้งานได้ในแท็บนี้ จึงไม่มีข้อมูลบนเซิร์ฟเวอร์ที่เชื่อมโยงกลับมาหาคุณได้";
+	"ล้างข้อมูลในเบราว์เซอร์นี้แล้ว แต่ไม่พบรหัสผู้ใช้ที่ยังใช้งานได้ในแท็บนี้ ข้อมูลที่เคยบันทึกไว้ (ถ้ามี) จึงยังอยู่บนเซิร์ฟเวอร์ เพียงแต่เราจับคู่กับคุณไม่ได้แล้ว และระบบจะลบหรือทำให้ไม่ระบุตัวตนเมื่อครบกำหนด";
 
 /**
  * Erases everything linked to the caller's anonymous id (quiz sessions, answers, demographics,

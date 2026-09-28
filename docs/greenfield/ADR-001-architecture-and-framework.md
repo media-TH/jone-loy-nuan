@@ -38,7 +38,7 @@
 | `/privacy` | RSC + island ปุ่มถอนความยินยอม/ลบข้อมูล | `app/(main)/privacy/page.tsx`, `privacy-actions.tsx` |
 | `/result` | ISR `revalidate = 3600` (เนื้อหาจาก `getQuiz()`) + island อ่านคะแนนจาก store | `app/(main)/result/page.tsx` |
 | `/survey` | RSC shell + form island | `app/(main)/survey/**` |
-| `/quiz` | เป้าหมาย: RSC อ่าน `getQuiz()` (cache) + quiz island; ปัจจุบันยัง dynamic ผ่าน `fetchQuizQuestions()` | `app/(main)/quiz/**` |
+| `/quiz` | ISR `revalidate = 3600`: RSC อ่าน `getContentSource().getQuiz()` แล้วส่ง `questions` ให้ quiz island; `error.tsx` เมื่อ source ล้ม | `app/(main)/quiz/**` |
 | `/robots.txt` | dynamic (อ่าน `Host` header) | `app/robots.ts` |
 | `/mgmt-portal/**`, `/api/**` | `force-dynamic` | `app/(admin)/**`, `app/api/**` |
 
@@ -50,16 +50,17 @@
 
 ### State
 
-- **zustand ใช้กับ quiz ที่กำลังเล่นเท่านั้น** (`store/quiz-store.ts`): คำตอบ, เวลา, session id ของรอบนี้ ไม่ persist ลง storage
+- **zustand ใช้กับ quiz ที่กำลังเล่นเท่านั้น** (`store/quiz-store.ts`): คำตอบ, เวลา, session id ของรอบนี้ ไม่ persist ลง storage; `/survey` และ `/result` อ่านจาก store เดียวกันในแท็บ
+- state ของหน้าจอ (ข้อปัจจุบัน, result sheet) เป็น local state ใน `hooks/useQuiz.ts` ไม่ขึ้น global
 - โทเค็นนิรนามอยู่ใน `sessionStorage` key `anon_jwt_cache` (`lib/services/anon-jwt.service.ts`) หายเมื่อปิดแท็บ
 - ข้อมูลอื่นเป็น server state (RSC props) หรือ URL (`/s/[score]`); ไม่เพิ่ม global store ใหม่
-- `store/quiz-store.backup.ts` เป็นไฟล์ค้างจากระบบเดิม ลบได้เมื่อหน้า quiz ย้ายเสร็จ
 
 ### Folder conventions
 
 - `app/(main)` = เว็บสาธารณะ (layout ครอบ `ScanTransitionProvider`), `app/(admin)` = หลังบ้าน
-- โฟลเดอร์ส่วนตัวของ route ใช้ `_components/` (ของเดิม `quiz/_component/` ให้เปลี่ยนชื่อตอนย้าย)
+- โฟลเดอร์ส่วนตัวของ route ใช้ `_components/` (เช่น `app/(main)/quiz/_components/`)
 - `components/ds/*` = DS: `cva` + `cn`, ใช้ semantic token เท่านั้น (ไม่มี hex, ไม่มี `bg-blue-500`, ไม่มี gradient), `focus-ring`, touch target ≥ 44px
+- `components/quiz/*` = scenario renderers ที่ประกอบจาก DS + `scenario-registry.tsx` (ADR-003)
 - `components/ui/*` = shadcn ของ admin (alias token ไว้ใน `app/globals.css`) ห้ามใช้ในหน้า public ใหม่
 - `lib/<domain>/` แยกตามโดเมน: `content`, `privacy`, `security`, `seo`, `motion`, `quiz`
 - โมดูลที่แตะ secret ต้อง `import "server-only"` (`utils/supabase/admin.ts`, `lib/security/require-admin.ts`, `lib/content/supabase-source.ts`, `lib/privacy/identity.ts`)
@@ -71,6 +72,6 @@
 - ข้อดี: ย้ายทีละ route ได้ admin เดิมทำงานต่อ; Vercel รองรับ ISR, cron, OG image ในตัว
 - ข้อดี: หน้าเนื้อหาเป็น static แทบทั้งหมด ต้นทุน function ต่ำ และ LCP ดี
 - ข้อเสีย: ผูกกับ Vercel/Next มากขึ้น (`vercel.json` cron, Vercel system env ใน `lib/seo/site.ts`); ย้าย host ต้องทำ cron และ OG ใหม่
-- ข้อเสีย: ช่วงเปลี่ยนผ่านมีโค้ดสองรุ่น (`framer-motion` + `motion/react`, `fetchQuizQuestions` + `getQuiz`) ต้องปิดงานใน Phase 1
+- ข้อเสีย: ยังมีโค้ดรุ่นเก่าค้าง (ไฟล์ `framer-motion` ที่ไม่มีใคร import, `fetchQuizQuestions()` ที่หน้า public ไม่ใช้แล้ว, `lib/motion/quiz-motion.ts`) ต้องเก็บกวาดใน Phase 1
 - ข้อควรระวัง: Vercel Hobby plan มีเงื่อนไขใช้งานแบบส่วนบุคคล/ไม่ใช่เชิงพาณิชย์ และ cron ได้วันละครั้ง ให้เจ้าของโครงการตรวจว่าต้องใช้ Pro หรือไม่
 - ติดตาม: เมื่อเปิด `cacheComponents` ของ Next 16 ให้ย้าย `unstable_cache` ไป `"use cache"` + `cacheTag()`

@@ -18,7 +18,8 @@ export interface AnonymousUserInfo {
 
 // Constants
 const STORAGE_KEY = 'scan_jone_anonymous_user';
-const ID_PREFIX = 'anon';
+// quiz_sessions.anonymous_user_id must start with "user_" (migration 04).
+const ID_PREFIX = 'user_';
 
 /**
  * Enhanced device information gathering
@@ -68,9 +69,11 @@ const getBrowserInfo = (): string => {
  * Create new anonymous user with device fingerprinting
  */
 const createNewAnonymousUser = (): AnonymousUserInfo => {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substr(2, 9);
-  const id = `${ID_PREFIX}_${timestamp}_${random}`;
+  const random =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  const id = `${ID_PREFIX}${random}`;
 
   return {
     id,

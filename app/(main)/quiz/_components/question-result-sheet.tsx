@@ -19,7 +19,8 @@ function resultTitle(question: Question, isCorrect: boolean): string {
 	return flags > 0 ? `ข้อนี้มีธงแดง ${flags} จุด` : "ข้อนี้มีกลลวงซ่อนอยู่";
 }
 
-function nextLabel(isLastQuestion: boolean, isFinishing: boolean): string {
+/** The label of the action that moves on (the sheet's spark button and the page's continue bar). */
+export function nextActionLabel(isLastQuestion: boolean, isFinishing: boolean): string {
 	if (isFinishing) return "กำลังบันทึกผล…";
 	return isLastQuestion ? "ดูผลลัพธ์" : "ข้อต่อไป";
 }
@@ -81,7 +82,7 @@ export function QuestionResultSheet({
 						aria-busy={isFinishing || undefined}
 						className="aria-disabled:cursor-progress aria-disabled:opacity-70"
 					>
-						{nextLabel(isLastQuestion, isFinishing)}
+						{nextActionLabel(isLastQuestion, isFinishing)}
 						{!isFinishing && <IconArrowRight aria-hidden stroke={2.25} />}
 					</Button>
 					{!isFinishing && (

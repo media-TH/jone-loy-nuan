@@ -177,21 +177,19 @@ describe("submitSurveyAction", () => {
 		expect(events.some((event) => event.target === "survey_responses")).toBe(true);
 	});
 
-	it("stores only the age band for a minor", async () => {
-		const { events } = setup();
+	it.each(["under-15", "15-19"])(
+		"stores nothing and logs no consent for a minor (%s, s.20)",
+		async (ageBand) => {
+			const { events } = setup();
 
-		const state = await submitSurveyAction(undefined, surveyForm({ ...CONSENTED_ADULT, ageBand: "15-19" }));
+			const state = await submitSurveyAction(undefined, surveyForm({ ...CONSENTED_ADULT, ageBand }));
 
-		expect(state).toMatchObject({ success: true, stored: true, minor: true });
-		const row = events.find((event) => event.target === "survey_responses")?.payload;
-		expect(row).toMatchObject({
-			age_group: "15-19",
-			gender: null,
-			province: null,
-			education: "not_specified",
-			occupation: "not_specified",
-		});
-	});
+			expect(state).toMatchObject({ success: true, stored: false, minor: true, code: "not_stored" });
+			expect(events).toEqual([]);
+			expect(mockedTokenClient).not.toHaveBeenCalled();
+			expect(mockedAdminClient).not.toHaveBeenCalled();
+		},
+	);
 
 	it("refuses a quiz session the caller does not own", async () => {
 		const { events } = setup({ ownsSession: false });

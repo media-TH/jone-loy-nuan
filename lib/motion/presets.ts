@@ -1,15 +1,26 @@
 /**
  * The motion moments of the "Scan & Flag" system, as reusable variants.
- * Nothing outside this inventory should animate (see docs/greenfield/ADR-002-motion.md).
+ * Nothing outside this inventory should animate (see docs/greenfield/ADR-002-motion-and-transitions.md).
  *
  * Reduced motion: <MotionConfig reducedMotion="user"> (components/motion/motion-provider.tsx)
  * drops transform/layout animation automatically and keeps opacity + colour, which is the
- * intended fallback for every preset here. Purely decorative moments (Scan Reveal band,
- * score count-up) check useReducedMotion() themselves and skip entirely.
+ * intended fallback for every preset here. Purely decorative moments skip entirely: the Scan
+ * Reveal band is hidden with `motion-reduce:hidden`, the score count-up checks useReducedMotion().
  */
 import { DUR, EASE, SPRING, STAGGER } from "./tokens";
 
 type AnyVariants = Record<string, any>;
+
+/**
+ * Moment 1 fallback — a 120ms opacity crossfade for route changes the Scan Wipe did not cover
+ * (reduced motion, back/forward). Opacity only, so reduced motion keeps it. Object targets, not
+ * variant labels, so children never inherit it (see app/(main)/template.tsx).
+ */
+export const routeCrossfade: any = {
+	initial: { opacity: 0 },
+	animate: { opacity: 1 },
+	transition: { duration: 0.12, ease: EASE.settle },
+};
 
 /** Generic entrance: 12px rise + fade. Page content, cards, list rows. */
 export const fadeUp: AnyVariants = {

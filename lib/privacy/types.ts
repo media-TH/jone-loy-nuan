@@ -84,9 +84,9 @@ export type EraseMyDataResult =
 // --- submitSurveyAction ----------------------------------------------------------------------
 
 export type SurveyResultCode =
-	/** Demographics stored (for minors: the age band only). */
+	/** Demographics stored (adults only). */
 	| "stored"
-	/** No consent for demographics: nothing personal was processed. Not an error. */
+	/** No consent for demographics, or an age band under 20: nothing was stored. Not an error. */
 	| "not_stored"
 	/** Consent given but there is no verifiable quiz session to attach it to. */
 	| "no_session"
@@ -102,7 +102,7 @@ export type SurveyActionState = {
 	code?: SurveyResultCode;
 	/** Whether any demographic data was written. */
 	stored?: boolean;
-	/** The age band was under 20, so only the age band was kept. */
+	/** The age band was under 20, so nothing was kept (s.20). */
 	minor?: boolean;
 	fieldErrors?: SurveyFieldErrors;
 	retryAfterSeconds?: number;

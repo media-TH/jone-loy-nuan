@@ -14,25 +14,27 @@ type PinAction = "cancel" | "confirm";
 /** Keypad in phone order; null is the empty bottom-left key. */
 const KEYPAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", null, "0", "backspace"] as const;
 
-const DEFAULT_LABELS: Record<PinAction, string> = {
+/** The fake screen's own buttons, as the PIN screen has always shown them. */
+const ACTION_LABELS: Record<PinAction, string> = {
 	cancel: "ไม่กรอกรหัส",
 	confirm: "ยืนยัน",
 };
 
 /**
- * The screen's two actions. Not entering the PIN is always the safe (correct) choice; the content's
- * answers, when present, name the buttons and give the answer ids to record.
+ * The screen's two actions. Not entering the PIN is always the safe (correct) choice. The
+ * content's answers only give the answer ids to record: the labels belong to the fake screen, so
+ * answer text written for the old answer list (the legacy PIN question) never renames them.
  */
 function pinActions(answers: readonly Answer[]): Record<PinAction, { label: string; answer: QuizAnswer }> {
 	const safe = answers.find((answer) => answer.isCorrect);
 	const unsafe = answers.find((answer) => !answer.isCorrect);
 	return {
 		cancel: {
-			label: safe?.text ?? DEFAULT_LABELS.cancel,
+			label: ACTION_LABELS.cancel,
 			answer: { answerId: safe?.id ?? null, isCorrect: true },
 		},
 		confirm: {
-			label: unsafe?.text ?? DEFAULT_LABELS.confirm,
+			label: ACTION_LABELS.confirm,
 			answer: { answerId: unsafe?.id ?? null, isCorrect: false },
 		},
 	};
@@ -50,7 +52,7 @@ function digitFromKey(event: KeyboardEvent): string | null {
  * so a keyboard user's focus stays where it is.
  */
 const KEY_CLASS = cn(
-	"focus-ring grid h-12 place-items-center rounded-sm border border-line bg-surface-raised text-ink",
+	"focus-ring grid h-12 place-items-center rounded-sm border border-line-strong bg-surface-raised text-ink",
 	"transition-colors duration-(--dur-quick) ease-settle",
 	"enabled:not-aria-disabled:hover:bg-brand-soft enabled:not-aria-disabled:active:bg-surface-sunken",
 	"disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:opacity-40",
@@ -174,8 +176,8 @@ export function PinEntryScenarioView({
 					</p>
 
 					<div className="grid grid-cols-3 gap-2">
-						{KEYPAD.map((key, index) => {
-							if (key === null) return <span key={index} aria-hidden />;
+						{KEYPAD.map((key) => {
+							if (key === null) return <span key="blank" aria-hidden />;
 							if (key === "backspace") {
 								return (
 									<button
@@ -208,6 +210,10 @@ export function PinEntryScenarioView({
 				</div>
 
 				<div className="flex gap-3">
+					{/*
+					 * aria-disabled, not disabled, once locked (choose() ignores the press): the button a
+					 * keyboard user just pressed keeps focus, so the result sheet returns focus to it.
+					 */}
 					{(["cancel", "confirm"] as const).map((action) => (
 						<Button
 							key={action}
@@ -215,13 +221,14 @@ export function PinEntryScenarioView({
 							variant={action === "confirm" ? "brand" : "quiet"}
 							size="md"
 							block
-							disabled={locked}
+							aria-disabled={locked || undefined}
 							aria-pressed={chosen === action}
 							onClick={() => choose(action)}
 							className={cn(
-								"min-w-0 whitespace-normal px-4",
+								"h-auto min-h-12 min-w-0 whitespace-normal px-4 py-2",
+								"aria-disabled:pointer-events-none",
 								// Keep the chosen action legible after locking; the other one fades out.
-								chosen === action && "disabled:opacity-100",
+								locked && chosen !== action && "aria-disabled:opacity-50",
 							)}
 						>
 							{chosen === action && (

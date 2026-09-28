@@ -9,13 +9,13 @@ import { QuizUnavailable } from "./_components/quiz-unavailable";
  * /quiz — the published default quiz from the configured content source (Supabase, Contentful, or
  * the local fixture with CONTENT_SOURCE=fixture). Metadata and the Quiz JSON-LD live in ./layout.tsx.
  *
- * A source failure is not caught here on purpose: while regenerating, Next.js then keeps serving the
- * last good page instead of caching an error for an hour, and a first render that fails shows
- * ./error.tsx. A source that answers "no published quiz" gets the calm state below.
+ * Rendered per request, never at build time: a prerender would run the content read during
+ * `next build`, so an unreachable database (or one not yet migrated) would fail the whole deploy.
+ * The content itself is still cached for an hour by lib/content (tagged, revalidateQuizContent()).
+ * A source failure is not caught here on purpose: it shows ./error.tsx. A source that answers
+ * "no published quiz" gets the calm state below.
  */
-
-// Same lifetime as the cached content itself (CONTENT_REVALIDATE_SECONDS).
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function QuizPage() {
 	const quiz = await getContentSource().getQuiz(DEFAULT_QUIZ_SLUG);

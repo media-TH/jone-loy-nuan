@@ -347,12 +347,15 @@ describe('Quiz Flow Integration Tests', () => {
 
         it('should submit final quiz summary by updating existing session', async () => {
             // Chain 1: .from().select().eq().single() - Check if session exists
-            mockSupabaseClient.single
-                .mockResolvedValueOnce({
-                    data: { id: mockSessionUUID, is_completed: false },
-                    error: null
-                })
-                // Chain 2: .from().update().eq() - Update session
+            mockSupabaseClient.single.mockResolvedValueOnce({
+                data: { id: mockSessionUUID, is_completed: false },
+                error: null
+            });
+            // Chain 2: .from().update().eq() - Update session. update() keeps chaining (this
+            // describe block makes it resolve by default) and the second eq() is the awaited end.
+            mockSupabaseClient.update.mockReturnValueOnce(mockSupabaseClient);
+            mockSupabaseClient.eq
+                .mockReturnValueOnce(mockSupabaseClient)
                 .mockResolvedValueOnce({ error: null });
 
             const result = await saveQuizResponse(mockQuizData);

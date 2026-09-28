@@ -6,7 +6,7 @@
 
 ## บริบท
 
-- ระบบเดิมมี quiz เดียว 10 ข้อ และ hardcode ความหมายไว้ในแอป: `order_index = 1` คือหน้าจอกรอก PIN, ข้ออื่นใช้รูป `/images/scenarios/question-{n}/normal|result.svg`, ธงแดงของข้อ PIN อยู่ใน `components/red-flag-overlay.tsx`
+- ระบบเดิมมี quiz เดียว 10 ข้อ และ hardcode ความหมายไว้ในแอป: `order_index = 1` คือหน้าจอกรอก PIN, ข้ออื่นใช้รูป `/images/scenarios/question-{n}/normal|result.svg`, ธงแดงของข้อ PIN อยู่ใน overlay แยก (`components/red-flag-overlay.tsx` เดิม ลบแล้ว)
 - ต้องการ: หลาย quiz/แคมเปญ, scenario แบบใหม่ (แชต LINE, สายโทรเข้า, SMS) ที่เป็นข้อความจริงแทนรูป, ธงแดงที่ปักตำแหน่งได้, ทางเลือกให้ทีมสื่อแก้เนื้อหาใน CMS
 - ข้อจำกัด: ห้ามพังข้อมูลเดิมใน Supabase และระบบหลังบ้านเดิมต้องแก้คำถามได้ต่อ
 
@@ -21,29 +21,34 @@
 
 | kind | fields | renderer |
 | --- | --- | --- |
-| `image-pair` | `normalSrc`, `resultSrc`, `alt` | มี (ของเดิม) |
-| `pin-entry` | `pinLength`, `prompt` | มี (ของเดิม) |
-| `chat` | `app` (`line` / `messenger` / `sms`), `messages[]` + `evidence?` | ยังไม่มี |
-| `call` | `caller`, `number`, `duration?` | ยังไม่มี |
-| `sms` | `sender`, `body`, `evidence?` | ยังไม่มี |
+| `image-pair` | `normalSrc`, `resultSrc`, `alt` | `components/quiz/image-pair-scenario.tsx` (+ preload ข้อถัดไป) |
+| `pin-entry` | `pinLength`, `prompt` | `components/quiz/pin-entry-scenario.tsx` (รับคำตอบเองจากปุ่มบนจอ) |
+| `chat` | `app` (`line` / `messenger` / `sms`), `messages[]` + `evidence?` | placeholder: `components/quiz/placeholder-scenario.tsx` |
+| `call` | `caller`, `number`, `duration?` | placeholder |
+| `sms` | `sender`, `body`, `evidence?` | placeholder |
 
 - `EvidenceRange` { start, end, flag } เป็น shape เดียวกับ `components/ds/evidence-text.tsx` ใช้ไฮไลต์ข้อความที่เป็นหลักฐาน
-- `RENDERABLE_SCENARIO_KINDS` + `isRenderableScenario()` แยก kind ที่แสดงผลได้วันนี้ออกจาก kind ที่ type ไว้ล่วงหน้า
+- `RENDERABLE_SCENARIO_KINDS` + `isRenderableScenario()` บอกว่า kind ใดมี renderer เต็มรูปแบบแล้ว (ตอนนี้ `image-pair`, `pin-entry`)
 - zod schema ใน `lib/content/schema.ts` ตรงกับ type ทีละตัว (`satisfies z.ZodType<...>` ถ้าไม่ตรง compile ไม่ผ่าน) และตรวจกติกาเนื้อหา: ≥ 2 คำตอบ (ยกเว้น `pin-entry`), มีคำตอบถูก ≥ 1, เลขธงไม่ซ้ำ, `evidence.flag` ต้องมีธงจริง, รูปต้องเป็น path `/…` หรือ `https:`
 - `validateQuiz()` ทิ้งเฉพาะข้อที่ไม่ผ่านแล้ว log ไว้ ไม่ทำให้ทั้ง quiz ล่ม
 
-### Scenario renderer registry (เป้าหมายของหน้า quiz ใหม่)
+### Scenario renderer registry (`components/quiz/scenario-registry.tsx`)
 
-ยังไม่มีในโค้ด ให้หน้า quiz ใหม่ใช้รูปแบบนี้เพื่อให้ TypeScript บังคับว่า kind ที่ render ได้ทุกตัวมี renderer:
+- หน้า quiz ตัดสินทุกอย่างที่ขึ้นกับ scenario ผ่านตารางนี้ ไม่ใช้ตำแหน่งข้ออีกต่อไป
+- mapped type ครอบทุก `ScenarioKind`: เพิ่ม kind ใหม่ใน `types.ts` แล้วไฟล์นี้ compile ไม่ผ่านจนกว่าจะมี entry
 
 ```tsx
-const SCENARIO_RENDERERS = {
-	"image-pair": ImagePairScenarioView,
-	"pin-entry": PinEntryScenarioView,
-} satisfies Record<RenderableScenario["kind"], ComponentType<any>>;
+export const SCENARIO_RENDERERS: { [K in ScenarioKind]: ScenarioRenderer<K> } = {
+	"image-pair": { Component: ImagePairScenarioView, answersInScenario: false, preload: preloadImagePair },
+	"pin-entry": { Component: PinEntryScenarioView, answersInScenario: true },
+	chat: { Component: PlaceholderScenarioView, answersInScenario: false },
+	// call, sms: PlaceholderScenarioView เช่นกัน
+};
 ```
 
-ข้อที่ `isRenderableScenario()` เป็น false ให้ข้ามพร้อม log ไม่ render ว่าง
+- `answersInScenario`: scenario รับคำตอบเอง (หน้าจอ PIN) หน้า quiz จึงไม่แสดงรายการคำตอบ
+- `preload`: อุ่น cache สื่อของข้อถัดไป; ข้อแรกได้ `priority` เพราะเป็น LCP candidate (`components/quiz/types.ts`)
+- placeholder แสดงข้อมูลของ scenario เป็นข้อความ (ใช้ `EvidenceText`) จึงเล่นได้ แต่ยังไม่สมจริงเท่า renderer เฉพาะ
 
 ### ContentSource adapters (`lib/content/source.ts`)
 
@@ -99,12 +104,14 @@ interface ContentSource {
 
 ## วิธีเพิ่ม scenario kind ใหม่
 
-1. เพิ่ม type ใน union `Scenario` และ `SCENARIO_KINDS` (`lib/content/types.ts`)
+1. เพิ่ม type ใน union `Scenario` และ `SCENARIO_KINDS` (`lib/content/types.ts`); `scenario-registry.tsx` จะ compile ไม่ผ่านจนกว่าจะทำขั้น 4
 2. เพิ่ม schema ใน `scenarioSchema` (`lib/content/schema.ts`); ถ้ามี evidence ให้เพิ่มใน `scenarioEvidence()`
 3. migration ใหม่ ขยาย `chk_questions_scenario_kind` (drop แล้ว add ใหม่)
-4. สร้าง renderer ด้วย DS (`ScenarioFrame`, `EvidenceText`, `RedFlagPin`) แล้วลงทะเบียนใน registry และ `RENDERABLE_SCENARIO_KINDS`
+4. สร้าง renderer ใน `components/quiz/` จาก DS (`ScenarioFrame`, `EvidenceText`, `RedFlagPin`) รับ `ScenarioViewProps` แล้วใส่ใน `SCENARIO_RENDERERS` (เริ่มด้วย `PlaceholderScenarioView` ได้) และเพิ่มใน `RENDERABLE_SCENARIO_KINDS` เมื่อ renderer จริงเสร็จ
 5. Contentful: field `scenario` เป็น JSON อยู่แล้ว ไม่ต้องแก้ mapping
-6. เพิ่มตัวอย่างใน fixture และ test ใน `__tests__/content/`
+6. เพิ่มตัวอย่างใน fixture และ test ใน `__tests__/content/` และ `__tests__/quiz/`
+
+ทำ renderer จริงให้ `chat` / `call` / `sms` ที่มีอยู่แล้ว: ทำเฉพาะขั้น 4 และ 6
 
 ## ผลที่ตามมา
 

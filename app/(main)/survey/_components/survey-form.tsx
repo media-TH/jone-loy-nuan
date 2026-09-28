@@ -143,7 +143,7 @@ export function SurveyForm() {
 		if (!isAgeBand(value)) return;
 		setAgeBand(value);
 		clearError("ageBand");
-		// s.20: nothing but the age band is asked of (or kept for) anyone under 20.
+		// s.20: nothing more is asked of anyone under 20, and nothing at all is sent or kept.
 		if (isMinorAgeBand(value)) {
 			setGender(null);
 			setProvince("");
@@ -210,8 +210,9 @@ export function SurveyForm() {
 		event.preventDefault();
 		if (busy || submittingRef.current) return;
 
-		// No consent: nothing is sent at all, not even to be discarded by the server.
-		if (!consentGiven) {
+		// No consent, or under 20 (s.20: we keep nothing for minors): nothing is sent at all, not
+		// even to be discarded by the server, and no consent is logged.
+		if (!consentGiven || minor) {
 			router.push("/result");
 			return;
 		}
@@ -224,16 +225,14 @@ export function SurveyForm() {
 			return;
 		}
 
-		// Built from state, not the DOM, so hidden (minor) questions can never be sent.
+		// Built from state, not the DOM, so hidden questions can never be sent.
 		const answers = new FormData();
 		answers.set(consentFieldName("demographics"), "granted");
 		answers.set("ageBand", ageBand);
-		if (!minor) {
-			if (gender) answers.set("gender", gender);
-			if (province) answers.set("province", province);
-			if (education) answers.set("education", education);
-			if (occupation) answers.set("occupation", occupation);
-		}
+		if (gender) answers.set("gender", gender);
+		if (province) answers.set("province", province);
+		if (education) answers.set("education", education);
+		if (occupation) answers.set("occupation", occupation);
 
 		submittingRef.current = true;
 		setNotice(null);
@@ -279,8 +278,8 @@ export function SurveyForm() {
 					<div className="flex items-start gap-3 rounded-md bg-surface-sunken p-4 text-ink">
 						<IconShieldLock aria-hidden stroke={2.25} className="mt-0.5 size-5 shrink-0 text-brand" />
 						<p className="type-body-sm">
-							<span className="font-semibold">สำหรับผู้ที่อายุต่ำกว่า 20 ปี เราขอแค่ช่วงอายุ</span>{" "}
-							และไม่ถามข้อมูลอื่น ถ้าคุณเลือกยินยอม เราจะเก็บเฉพาะช่วงอายุเท่านั้น
+							<span className="font-semibold">สำหรับผู้ที่อายุต่ำกว่า 20 ปี เราไม่เก็บข้อมูลจากแบบสอบถามนี้</span>{" "}
+							ไม่ว่าจะเปิด “ยินยอม” หรือไม่ ช่วงอายุที่เลือกจะไม่ถูกส่งหรือบันทึก กด “ดูผลลัพธ์” ได้เลย
 						</p>
 					</div>
 				) : (
@@ -377,7 +376,7 @@ export function SurveyForm() {
 			/>
 
 			<div className="flex flex-col gap-3">
-				{answeredSomething && !consentGiven ? (
+				{answeredSomething && !consentGiven && !minor ? (
 					<p className="flex items-start gap-2 type-body-sm text-ink-muted">
 						<IconInfoCircle aria-hidden stroke={2.25} className="mt-0.5 size-[1.125rem] shrink-0" />
 						<span>คุณยังไม่ได้เปิด “ยินยอม” คำตอบข้างบนจะไม่ถูกส่งหรือบันทึก และเราจะพาไปดูผลลัพธ์เลย</span>

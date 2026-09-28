@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { KPITargetManager, KPICalculationUtils } from '../kpi-target-service';
-import type { KPICategory, KPITargetStatus } from '../../types';
+import { KPITargetManager, KPICalculationUtils } from '@/lib/services/kpi-target-service';
+import { KPICategory, type KPITargetStatus } from '@/lib/types';
 
 describe('KPITargetManager', () => {
     describe('validateTargetPercentage', () => {
@@ -20,7 +19,7 @@ describe('KPITargetManager', () => {
 
     describe('createKPITarget', () => {
         it('should create a valid KPI target with default 80% threshold', () => {
-            const target = KPITargetManager.createKPITarget('SCAM_RECOGNITION', 3);
+            const target = KPITargetManager.createKPITarget(KPICategory.SCAM_RECOGNITION, 3);
 
             expect(target.kpiCategory).toBe('SCAM_RECOGNITION');
             expect(target.totalQuestions).toBe(3);
@@ -29,7 +28,7 @@ describe('KPITargetManager', () => {
         });
 
         it('should create a KPI target with custom threshold', () => {
-            const target = KPITargetManager.createKPITarget('RISK_ASSESSMENT', 2, 0.9, 'Custom description');
+            const target = KPITargetManager.createKPITarget(KPICategory.RISK_ASSESSMENT, 2, 0.9, 'Custom description');
 
             expect(target.kpiCategory).toBe('RISK_ASSESSMENT');
             expect(target.totalQuestions).toBe(2);
@@ -39,13 +38,13 @@ describe('KPITargetManager', () => {
 
         it('should throw error for invalid target percentage', () => {
             expect(() => {
-                KPITargetManager.createKPITarget('SCAM_RECOGNITION', 3, 1.5);
+                KPITargetManager.createKPITarget(KPICategory.SCAM_RECOGNITION, 3, 1.5);
             }).toThrow('Target percentage must be between 0 and 1');
         });
 
         it('should throw error for invalid total questions', () => {
             expect(() => {
-                KPITargetManager.createKPITarget('SCAM_RECOGNITION', 0);
+                KPITargetManager.createKPITarget(KPICategory.SCAM_RECOGNITION, 0);
             }).toThrow('Total questions must be greater than 0');
         });
     });

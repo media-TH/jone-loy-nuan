@@ -9,7 +9,12 @@
  * screen is covered, and the panel continues off the top once the new pathname renders.
  *
  * Back/forward and plain <Link> navigations skip the wipe; app/(main)/template.tsx gives
- * those a light enter animation instead. Reduced motion skips the wipe entirely.
+ * those (and every navigation under reduced motion, which skips the wipe entirely) the 120ms
+ * crossfade instead.
+ *
+ * A navigation is never dropped: one that arrives while a wipe is running (a second tap, Back
+ * during the cover) goes straight to the router, and the running wipe then reveals whatever
+ * page is showing instead of pushing its own, now stale, target.
  */
 
 import Link from "next/link";
@@ -41,6 +46,7 @@ type WipeState = {
 type NavigateOptions = { replace?: boolean };
 
 type ScanTransitionContextValue = {
+	/** Starts the wipe, or navigates directly when a wipe cannot run. Never drops a navigation. */
 	navigate: (href: string, options?: NavigateOptions) => void;
 	isTransitioning: boolean;
 };
@@ -68,7 +74,12 @@ export function ScanTransitionProvider({ children }: { children: ReactNode }) {
 	const navigate = useCallback(
 		(href: string, options?: NavigateOptions) => {
 			const replace = options?.replace ?? false;
-			if (state.phase !== "idle") return;
+			if (state.phase !== "idle") {
+				// Already queued behind the running cover (e.g. a double tap): nothing to add.
+				if ((state.phase === "covering" || state.phase === "covered") && href === state.href) return;
+				go(href, replace);
+				return;
+			}
 
 			const target = new URL(href, window.location.href);
 			const isSamePage = target.pathname === window.location.pathname;
@@ -78,7 +89,7 @@ export function ScanTransitionProvider({ children }: { children: ReactNode }) {
 			}
 			setState({ phase: "covering", href, replace, from: pathname });
 		},
-		[go, pathname, prefersReducedMotion, state.phase],
+		[go, pathname, prefersReducedMotion, state.phase, state.href],
 	);
 
 	// Derived, not stored: once the new route has rendered, the panel reveals.
@@ -96,6 +107,12 @@ export function ScanTransitionProvider({ children }: { children: ReactNode }) {
 
 	const handleAnimationComplete = (definition: unknown) => {
 		if (definition === "covering" && state.phase === "covering" && state.href) {
+			if (pathname !== state.from) {
+				// The route changed while covering (Back, or a navigation that did not wait):
+				// reveal that page and drop the stale push.
+				setState((s) => ({ ...s, phase: "revealing" }));
+				return;
+			}
 			setState((s) => ({ ...s, phase: "covered" }));
 			go(state.href, state.replace);
 		} else if (definition === "revealing") {
@@ -132,6 +149,14 @@ export function ScanTransitionProvider({ children }: { children: ReactNode }) {
 			</m.div>
 		</ScanTransitionContext.Provider>
 	);
+}
+
+/**
+ * True while a Scan Wipe is on screen. app/(main)/template.tsx reads it when a page mounts: a
+ * page that arrives under the panel needs no enter animation of its own.
+ */
+export function useScanWipeActive(): boolean {
+	return useContext(ScanTransitionContext)?.isTransitioning ?? false;
 }
 
 /** Programmatic navigation with the Scan Wipe (falls back to the plain router). */

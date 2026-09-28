@@ -28,8 +28,8 @@
 - `proxy.ts` → `utils/supabase/middleware.ts` ข้ามการ refresh session: หน้า public โหลดโดยไม่มี network call, `/mgmt-portal` redirect ไป `/login`
 - `lib/content/index.ts` เลือก `fixture` source (SAMPLE 10 ข้อใน `lib/content/fixture-source.ts`) เมื่อ `NODE_ENV !== "production"`
 - dev ได้ CSP แบบผ่อน (`'unsafe-eval'`, `ws:`) และไม่ส่ง HSTS / `X-Frame-Options` จึง preview ผ่าน LAN หรือ iframe ได้ (`lib/security/csp.ts`)
-- หน้า `/`, `/learn`, `/s/[score]`, `/privacy`, `/result` เปิดได้; การบันทึกคำตอบ, survey และการลบข้อมูลต้องมี Supabase
-- ข้อจำกัด: `/quiz` ยังเรียก `fetchQuizQuestions()` (`lib/actions/questions.ts`) ซึ่งต้องมี Supabase จนกว่าจะย้ายไป `getQuiz()` (Phase 1 ด้านล่าง)
+- เล่นได้ครบทั้ง flow: `/` → `/quiz` (fixture) → `/survey` → `/result` → `/s/[score]`, รวม `/learn` และ `/privacy`
+- ส่วนที่เขียนฐานข้อมูล (บันทึกผล, ส่ง survey, ถอนความยินยอม, ลบข้อมูล) ต้องมี Supabase; ถ้าไม่มี จะล้มแบบ fail-soft และผู้เล่นยังไปหน้าผลลัพธ์ได้ (`hooks/useQuiz.ts` `submitQuizSummary()`)
 
 ## Target architecture
 
@@ -84,7 +84,7 @@ app/
   layout.tsx                 root: fonts, metadata, site JSON-LD, <MotionProvider>
   (main)/                    เว็บสาธารณะ; layout.tsx ครอบ <ScanTransitionProvider>, template.tsx = enter animation
     page.tsx                 landing (static RSC)
-    quiz/ result/ survey/    flow หลัก (result = ISR 1 ชม. + client island)
+    quiz/ result/ survey/    flow หลัก (quiz, result = ISR 1 ชม. + client island)
     learn/ s/[score]/        คลังความรู้ + หน้าแชร์คะแนน (SSG)
     privacy/                 ประกาศความเป็นส่วนตัว + ถอนความยินยอม / ลบข้อมูล
   (admin)/mgmt-portal/       ระบบหลังบ้าน (ของเดิม, force-dynamic)
@@ -92,7 +92,9 @@ app/
   robots.ts sitemap.ts manifest.ts opengraph-image.tsx
 components/ds/               Design System "Scan & Flag" (cva + semantic tokens)
 components/motion/           MotionProvider, ScanTransition (Scan Wipe), ScanReveal
+components/quiz/             scenario renderers + scenario-registry.tsx (kind → renderer)
 components/share/            ปุ่มแชร์ (Web Share, LINE, Facebook, คัดลอกลิงก์)
+hooks/useQuiz.ts             state ของหน้าจอ quiz + การบันทึกผล
 lib/content/                 content model + sources (Supabase / Contentful / fixture) + learn articles
 lib/motion/                  tokens.ts + presets.ts (quiz-motion.ts = legacy ห้าม import ใหม่)
 lib/privacy/                 policy.ts (single source of truth PDPA), survey schema, identity, rate limit
@@ -102,7 +104,7 @@ lib/actions/                 Server Actions (privacy.ts, survey.ts ใหม่;
 store/quiz-store.ts          zustand: state ของ quiz ที่กำลังเล่นเท่านั้น
 supabase/migrations/         01–06 ของเดิม, 07–09 ของ greenfield
 supabase/functions/issue-anon-jwt/
-__tests__/<domain>/          content, privacy, security, seo, share, survey, result, ds
+__tests__/<domain>/          content, privacy, security, seo, share, quiz, survey, result, ds
 ```
 
 ## Request / data flow: เล่น quiz หนึ่งรอบ
@@ -119,15 +121,16 @@ sequenceDiagram
   Note over V: proxy.ts ไม่มี sb-*-auth-token จึงผ่านทันที
   V->>DB: getQuiz() → rpc get_questions_with_answers (anon key, cache 1 ชม.)
   DB-->>V: rows → legacyRowsToQuestions → validateQuiz
-  V-->>P: HTML + quiz island
+  V-->>P: HTML (ISR) + quiz island
   P->>EF: POST {}
   EF-->>P: token, anon_user_id, expires_at (เก็บใน sessionStorage)
   P->>DB: rpc create_quiz_session (Bearer anon JWT)
   loop 10 ข้อ
-    P->>P: ตอบ → zustand store, Answer feedback, Flag Plant
+    P->>P: ตอบ → zustand store, Answer feedback, Flag Plant, Result sheet
+    P->>DB: QuizService.updateSession (Bearer anon JWT)
   end
-  P->>V: Server Actions saveQuestionResponsesBatch + saveQuizResponse
-  V->>DB: เขียนด้วย anon JWT (RLS 05/06 ตรวจ anon_user_id)
+  P->>V: Server Action saveQuizResponse (token)
+  V->>DB: เขียน quiz_sessions ด้วย anon JWT (RLS 05 ตรวจ anon_user_id)
   opt ยินยอมให้ข้อมูลประชากร
     P->>V: recordConsent แล้ว submitSurveyAction
     V->>DB: pdpa_current_subject → pdpa_consent_log → survey_responses (service role)
@@ -136,15 +139,18 @@ sequenceDiagram
   P->>P: แชร์ /s/0..10 (มีแค่คะแนน)
 ```
 
-หมายเหตุ: ขั้น `getQuiz()` คือเป้าหมาย; ณ วันที่เขียน `app/(main)/quiz/page.tsx` ยังเรียก `fetchQuizQuestions()` (อ่าน cookies จึงเป็น dynamic และไม่ cache) ส่วน `/result` ใช้ `getQuiz()` แล้ว
+หมายเหตุ
+
+- `/quiz` (`app/(main)/quiz/page.tsx`) และ `/result` อ่านเนื้อหาผ่าน content source และ ISR 3600 วินาที; ถ้า source ล้ม `/quiz` ไม่ cache error แต่เสิร์ฟหน้าดีล่าสุดต่อ หรือแสดง `error.tsx` ในการ render ครั้งแรก
+- flow ใหม่ (`hooks/useQuiz.ts`) บันทึกสรุปต่อ session เท่านั้น; ยังไม่มีการเรียก `saveQuestionResponsesBatch` (คำตอบรายข้อใน `question_responses`) ดู roadmap Phase 1
 
 ## สิ่งที่ branch นี้ส่งมอบ vs. ขั้นต่อไป
 
 **ส่งมอบแล้ว**
 
 - Design tokens + DS components 14 ไฟล์ใน `components/ds/`, motion foundation (`lib/motion/*`, `components/motion/*`)
-- หน้าใหม่: landing, `/result`, `/survey`, `/learn` (6 บทความ), `/s/[score]`, `/privacy`, `/error`
-- Content layer (`lib/content/*`) + migration 09
+- หน้าใหม่: landing, `/quiz`, `/result`, `/survey`, `/learn` (6 บทความ), `/s/[score]`, `/privacy`, `/error`
+- Content layer (`lib/content/*`) + migration 09; หน้า quiz อ่านผ่าน content source และเลือก renderer ตาม `scenario.kind` (`components/quiz/scenario-registry.tsx`)
 - SEO: metadata ต่อหน้า, `robots.ts` ตาม host, `sitemap.ts`, `manifest.ts`, OG images ภาษาไทย, JSON-LD
 - Security: CSP + security headers ทุก response, `/api/analytics/*` ต้องเป็น admin, `/api/health`, proxy แบบ fail-soft
 - PDPA: `lib/privacy/policy.ts`, consent log + retention purge + erasure (migration 08), Server Actions ใหม่
@@ -154,14 +160,15 @@ sequenceDiagram
 
 | Phase | งาน | อ้างอิง |
 | --- | --- | --- |
-| 1 (ต่อทันที) | ย้าย `/quiz` ไป `getQuiz()` + DS components + scenario renderer registry; ลบ `framer-motion` imports ที่เหลือ | ADR-001, 002, 003 |
+| 1 (ต่อทันที) | บันทึกคำตอบรายข้อ (`question_responses`) จาก flow ใหม่ ซึ่ง analytics ของ admin ใช้อยู่ (`store/quiz-store.ts` มี `saveQuizSummaryToApi` แต่ไม่มีใครเรียก) | หมายเหตุด้านบน |
+| 1 | ลบไฟล์ `framer-motion` ที่ไม่มีใครใช้ + `lib/motion/quiz-motion.ts`, ถอด `framer-motion` จาก `package.json`, เปิด `LazyMotion strict` | ADR-002 |
 | 1 | เรียก `revalidateQuizContent()` จาก Server Actions ของ admin หลังแก้คำถาม | ADR-003 |
 | 1 | ใช้ `safeRedirectPath()` ใน `app/(main)/login/action.ts`; ใช้ `ADMIN_EMAILS` ใน admin layout ด้วย | ADR-005 |
 | 1 | ตรวจ path Edge Function (`/functions/v2/` ในโค้ด) และสถานะ RLS ของ `questions` / `answers` ใน production | ADR-005 |
 | 2 | Supabase Anonymous Sign-Ins + Turnstile แทน `issue-anon-jwt`; ย้ายการคิดคะแนนไป server | ADR-005 |
 | 2 | Vercel Firewall rate limit, nonce CSP, หมุน key | ADR-005 |
 | 2 | กรอก `CONTROLLER` (TODO(legal)), DPA กับ Supabase/Vercel, ตั้ง region สิงคโปร์ | ADR-006 |
-| 3 | `/quiz/[slug]` หลายแคมเปญ, scenario kind `chat` / `call` / `sms`, i18n `en` | ADR-003 |
+| 3 | `/quiz/[slug]` หลายแคมเปญ, renderer จริงของ `chat` / `call` / `sms` (ตอนนี้เป็น placeholder), i18n `en` | ADR-003 |
 | 3 | backlog ฟีเจอร์ผู้ใช้ (ADR-004) | ADR-004 |
 
 ## Setup checklist
@@ -181,7 +188,7 @@ sequenceDiagram
 **Supabase**
 
 - Apply migrations ตามลำดับ `07-keepalive.sql` → `08-pdpa-consent-retention.sql` → `09-content-model.sql` (ทุกไฟล์ idempotent)
-- 08 ต้องมี extension `pg_cron` และต้อง deploy พร้อม `lib/actions/survey.ts` (หลัง 08 role anon/authenticated เขียน `survey_responses` ตรงไม่ได้); backup ก่อน เพราะ purge รอบแรกจะ roll up + ลบข้อมูลประชากรเก่ากว่า 12 เดือน
+- 08 สร้าง extension `pg_cron` เอง (`create extension if not exists`) และต้อง deploy พร้อม `lib/actions/survey.ts` (หลัง 08 role anon/authenticated เขียน `survey_responses` ตรงไม่ได้); backup ก่อน เพราะ purge รอบแรกจะ roll up + ลบข้อมูลประชากรเก่ากว่า 12 เดือน
 - Edge Function secrets: `ANON_JWT_SECRET` (project JWT secret), `TOKEN_TTL_SECONDS`
 - ตรวจ: `select * from cron.job where jobname = 'pdpa-retention-purge';`
 

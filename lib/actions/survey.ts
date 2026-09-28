@@ -7,7 +7,9 @@
  * PDPA enforcement happens here, on the server, whatever the page sends:
  * 1. Without the demographics consent flag nothing personal is processed or stored (s.19).
  * 2. Fields are closed option lists: age band (no date of birth), one of the 77 provinces, gender
- *    including "ไม่ระบุ" (lib/privacy/survey.ts). Under 20: the age band only (s.20).
+ *    including "ไม่ระบุ" (lib/privacy/survey.ts).
+ * 2a. Under 20 nothing is stored and no consent is logged: a minor's consent needs the holder of
+ *    parental responsibility (s.20), which this anonymous survey cannot verify.
  * 3. The caller's anonymous identity is verified by the database and the quiz session must be
  *    theirs (RLS), so the answers stay linked to them for withdrawal and erasure.
  * 4. The consent is written to pdpa_consent_log with POLICY_VERSION *before* any answer is stored.
@@ -32,6 +34,14 @@ const NO_SESSION: SurveyActionState = {
 	stored: false,
 	code: "no_session",
 	message: "ยังบันทึกข้อมูลไม่ได้ เพราะไม่พบรอบแบบทดสอบของคุณในแท็บนี้ คุณดูผลลัพธ์ต่อได้ตามปกติ",
+};
+
+const MINOR_NOT_STORED: SurveyActionState = {
+	success: true,
+	stored: false,
+	minor: true,
+	code: "not_stored",
+	message: "เราไม่เก็บข้อมูลของผู้ที่อายุต่ำกว่า 20 ปี ไปดูผลลัพธ์กันต่อเลย",
 };
 
 const SERVER_ERROR: SurveyActionState = {
@@ -79,6 +89,8 @@ export async function submitSurveyAction(
 	}
 
 	const { token, quizSessionId, demographics } = submission;
+	// s.20: the minor's own tick is not valid consent, so nothing is logged or written.
+	if (demographics.minor) return MINOR_NOT_STORED;
 	if (!token || !quizSessionId) return NO_SESSION;
 
 	try {
@@ -134,11 +146,9 @@ export async function submitSurveyAction(
 		return {
 			success: true,
 			stored: true,
-			minor: demographics.minor,
+			minor: false,
 			code: "stored",
-			message: demographics.minor
-				? "บันทึกช่วงอายุของคุณแล้ว ขอบคุณที่ช่วยให้เราวางแผนการสื่อสารได้ดีขึ้น"
-				: "บันทึกข้อมูลแล้ว ขอบคุณที่ช่วยให้เราวางแผนการสื่อสารได้ดีขึ้น",
+			message: "บันทึกข้อมูลแล้ว ขอบคุณที่ช่วยให้เราวางแผนการสื่อสารได้ดีขึ้น",
 		};
 	} catch (error) {
 		console.error("[submitSurveyAction] failed", error);

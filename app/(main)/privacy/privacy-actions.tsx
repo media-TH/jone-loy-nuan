@@ -16,6 +16,7 @@ import { Button } from "@/components/ds/button";
 import { StatusIcon } from "@/components/ds/status-icon";
 import { eraseMyData, withdrawConsent } from "@/lib/actions/privacy";
 import { clearClientStorage } from "@/lib/privacy/client-storage";
+import { ANON_TOKEN_TTL_HOURS, RETENTION } from "@/lib/privacy/policy";
 import type { ConsentActionResult, EraseMyDataResult } from "@/lib/privacy/types";
 import { clearAnonToken, getCachedAnonToken } from "@/lib/services/anon-jwt.service";
 import { cn } from "@/lib/utils";
@@ -65,10 +66,11 @@ export function WithdrawConsent() {
 		startTransition(async () => {
 			const token = getCachedAnonToken()?.token;
 			if (!token) {
+				// No token = we cannot tell which rows are this person's. Say so; never claim none exist.
 				setStatus({
-					tone: "safe",
-					title: "ไม่มีความยินยอมที่ต้องถอน",
-					text: "ไม่พบรหัสผู้ใช้ที่ยังใช้งานได้ในแท็บนี้ จึงไม่มีข้อมูลประชากรที่เชื่อมโยงกับคุณ",
+					tone: "caution",
+					title: "ถอนจากแท็บนี้ไม่ได้",
+					text: `ไม่พบรหัสผู้ใช้ที่ยังใช้งานได้ในแท็บนี้ (ปิดแท็บไปแล้ว หรือเกิน ${ANON_TOKEN_TTL_HOURS} ชั่วโมง) ถ้าคุณเคยให้ข้อมูลประชากรไว้ ข้อมูลนั้นยังอยู่ แต่เราจับคู่กับคุณจากที่นี่ไม่ได้แล้ว ระบบจะลบเองเมื่อครบ ${RETENTION.demographics.months} เดือน หรือติดต่อผู้ควบคุมข้อมูลตามหัวข้อแรก`,
 				});
 				return;
 			}

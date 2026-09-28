@@ -83,8 +83,8 @@ stateDiagram-v2
 - animate เฉพาะ `transform` และ `opacity` (compositor); ข้อยกเว้นเดียวคือ FLIP ของ `layoutId` ใน Progress Rail
 - ≤ 1 animation เต็มจอพร้อมกัน; ทุก moment ≤ 560ms ยกเว้น Scan Reveal (900ms, ตกแต่ง, ไม่บล็อก input) และนับคะแนน (800ms)
 - ไม่มี animation ใดทำให้ layout ขยับ: เป้าหมาย CLS จาก motion = 0; press feedback ไม่รอ animation จบก่อนตอบสนอง (INP)
-- JS: `m` + `LazyMotion` แทน `motion.*`; ขั้นต่อไปคือโหลด `domMax` แบบ async (`features={() => import(...)}`) และเปิด `strict` ใน `LazyMotion` เมื่อไม่เหลือ `motion.*` ในหน้า public
-- ห้ามใช้ `framer-motion` ใน route public ใหม่: ปัจจุบัน `app/(main)/quiz/_component/*` และ `components/red-flag-overlay.tsx`, `content-area.tsx` (ที่ quiz เดิมใช้) ยัง import อยู่ และ `motion.*` ใน `LazyMotion` ที่ไม่ strict จะดึง feature bundle เต็มมาด้วย; `components/page-transition.tsx`, `stair-transition.tsx`, `stairs.tsx` ไม่มีใคร import แล้ว ลบได้
+- JS: `m` + `LazyMotion` แทน `motion.*`; ขั้นต่อไปคือโหลด `domMax` แบบ async (`features={() => import(...)}`) และเปิด `strict` ใน `LazyMotion` (throw เมื่อมีใคร render `motion.*` ซึ่งจะดึง feature bundle เต็มมาด้วย)
+- ห้าม import `framer-motion` ในโค้ดใหม่: หน้า quiz ใหม่ (`app/(main)/quiz/_components/*`, `components/quiz/*`) ไม่ import motion เองเลย ได้ moment ทั้งหมดผ่าน DS components และใช้ `DUR` / `STAGGER` เพียงจังหวะเปิด result sheet; ที่ยังเหลือคือ `components/page-transition.tsx`, `stair-transition.tsx`, `stairs.tsx`, `page-content.tsx` ซึ่งไม่มีใคร import แล้ว ลบได้ทันที; `lib/motion/quiz-motion.ts` ถูก mark `@deprecated` และเหลือผู้ใช้เพียง `lib/constants.ts`
 
 ## ผลที่ตามมา
 
@@ -92,4 +92,4 @@ stateDiagram-v2
 - ข้อดี: reduced motion ได้ผลทั้งแอปจากจุดเดียว
 - ข้อเสีย: Scan Wipe เป็น overlay ของเราเอง ต้องดูแลกรณีขอบ (timeout, back/forward) เอง
 - ข้อเสีย: spec กำหนด reduced motion ของ Scan Wipe เป็น crossfade 120ms แต่ปัจจุบันได้ fade 240ms (`fadeUp` ผ่าน `template.tsx`); ปรับได้ถ้าจำเป็น
-- ติดตาม: ถอด `framer-motion` ออกจาก `package.json` เมื่อหน้า quiz ย้ายเสร็จ; comment ใน `lib/motion/presets.ts` ยังอ้างชื่อไฟล์ `ADR-002-motion.md` ให้แก้เป็นไฟล์นี้
+- ติดตาม: ลบไฟล์ legacy ข้างบนแล้วถอด `framer-motion` ออกจาก `package.json`; comment ใน `lib/motion/presets.ts` ยังอ้างชื่อไฟล์ `ADR-002-motion.md` ให้แก้เป็นไฟล์นี้
