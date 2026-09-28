@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 import packageJson from "./package.json";
+import { assertControllerConfiguredForProduction } from "./lib/privacy/policy";
 import { buildSecurityHeaders } from "./lib/security/csp";
+import { resolveSiteUrl } from "./lib/seo/site";
+
+// PDPA s.23(5): no production deployment with a privacy notice that names no data controller.
+assertControllerConfiguredForProduction(process.env);
 
 type RemotePatterns = NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]>;
 
@@ -51,6 +56,12 @@ const securityHeaders = buildSecurityHeaders({
 
 const noIndex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
 
+/** Canonical host as a full-match pattern for `missing` (has/missing values are regular expressions). */
+const canonicalHostPattern = resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL).hostname.replace(
+	/[.*+?^${}()|[\]\\]/g,
+	"\\$&",
+);
+
 const nextConfig: NextConfig = {
 	poweredByHeader: false,
 	images: {
@@ -64,6 +75,18 @@ const nextConfig: NextConfig = {
 			{ source: "/mgmt-portal/:path*", headers: noIndex },
 			{ source: "/login", headers: noIndex },
 			{ source: "/api/:path*", headers: noIndex },
+			// The production deployment also answers on its *.vercel.app aliases: those copies are
+			// noindex per request (page metadata is decided at build time and cannot tell hosts apart).
+			// Previews keep Vercel's own noindex.
+			...(process.env.VERCEL_ENV === "production"
+				? [
+						{
+							source: "/:path*",
+							missing: [{ type: "host" as const, value: canonicalHostPattern }],
+							headers: noIndex,
+						},
+					]
+				: []),
 		];
 	},
 };

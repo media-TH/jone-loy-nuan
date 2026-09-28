@@ -360,6 +360,25 @@ export function isControllerConfigured(controller: ControllerDetails = CONTROLLE
 	return Boolean(controller.name?.trim() && controller.address?.trim() && controller.email?.trim());
 }
 
+/**
+ * Blocks a production deployment while the controller details are missing: the notice would go
+ * live without the identity and contact channel PDPA s.23(5) requires, and the rights section
+ * would point to a channel that does not exist. next.config.ts calls this, so `next build` fails
+ * on Vercel production (VERCEL_ENV=production) until CONTROLLER is filled in; previews and local
+ * builds keep working with CONTACT_FALLBACK.
+ */
+export function assertControllerConfiguredForProduction(
+	env: Record<string, string | undefined>,
+	controller: ControllerDetails = CONTROLLER,
+): void {
+	if (env.VERCEL_ENV !== "production" || isControllerConfigured(controller)) return;
+	throw new Error(
+		"[privacy] CONTROLLER in lib/privacy/policy.ts is not filled in (name, address, email). " +
+			"The privacy notice cannot go to production without the data controller's identity and " +
+			"contact channel (PDPA s.23(5)). Fill it in with details confirmed by legal.",
+	);
+}
+
 /** Supervisory authority for complaints (s.73). */
 export const SUPERVISORY_AUTHORITY = {
 	name: "สำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคล (สคส.)",

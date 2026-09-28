@@ -58,16 +58,20 @@ begin
 end $$;
 
 comment on column public.survey_responses.gender is
-  'female | male | other | unspecified (ไม่ระบุ). NULL for minors (s.20: age band only) and when not answered.';
+  'female | male | other | unspecified (ไม่ระบุ). NULL when not answered. Nothing is stored for minors (s.20).';
 comment on column public.survey_responses.policy_version is
   'POLICY_VERSION of the privacy notice the demographics consent was given under (lib/privacy/policy.ts).';
 
 -- submitSurveyAction verifies consent and session ownership, then writes with the service role.
 -- Direct writes with the public key or an anon JWT would skip those checks.
 revoke insert, update, delete, truncate on table public.survey_responses from anon, authenticated;
--- Visitors without any JWT have no reason to read demographics.
-revoke select on table public.survey_responses from anon;
+-- Nobody reads demographics through the API: every player's anon JWT has role "authenticated",
+-- so a grant to that role would hand every respondent's row to every player. The portal reads
+-- them with the service role behind the admin gate (lib/actions/advanced-analytics.ts).
+revoke select on table public.survey_responses from public, anon, authenticated;
 grant select, insert, update, delete on table public.survey_responses to service_role;
+-- Defence in depth if a grant ever comes back: RLS on, and no policy for any API role.
+alter table public.survey_responses enable row level security;
 
 
 -- ----------------------------------------------------------------------------
@@ -506,6 +510,10 @@ begin
     'survey_demographics_monthly was not created';
   assert (select relrowsecurity from pg_class where oid = 'public.pdpa_consent_log'::regclass),
     'RLS is off on pdpa_consent_log';
+  assert (select relrowsecurity from pg_class where oid = 'public.survey_responses'::regclass),
+    'RLS is off on survey_responses';
+  assert not has_table_privilege('authenticated', 'public.survey_responses', 'select'),
+    'authenticated can still read survey_responses';
   assert exists (select 1 from cron.job where jobname = 'pdpa-retention-purge'),
     'pdpa-retention-purge is not scheduled';
   raise notice 'PDPA consent log, retention purge and erasure functions are in place.';

@@ -78,7 +78,7 @@ interface ContentSource {
 - อายุ cache 3600 วินาที (`CONTENT_REVALIDATE_SECONDS`) ใต้ tag `content`, `content:quiz:<slug>`, `content:quizzes`
 - Supabase: `unstable_cache`; Contentful: `fetch(..., { next: { tags, revalidate } })`
 - ล้างทันที: `revalidateQuizContent(slug)` / `revalidateAllContent()` (`revalidateTag(tag, { expire: 0 })`)
-- **ช่องว่างปัจจุบัน**: Server Actions ของ admin (`lib/actions/questions.ts`: `upsertQuestion`, `deleteQuestionAction`, `updateQuizOrderAction`) ยังไม่เรียก `revalidateQuizContent()` การแก้จึงเห็นช้าสุด 1 ชั่วโมง; Contentful ต้องมี webhook route (ยังไม่ทำ) ที่ตรวจ secret แล้วเรียก `revalidateQuizContent`
+- Server Actions ของ admin (`lib/actions/questions.ts` ทุกตัวที่เขียน, `lib/actions/images.ts`) เรียก `revalidateAllContent()` และ `revalidatePath("/quiz")` หลังเขียนสำเร็จ ผู้เล่นจึงเห็นการแก้ในการโหลดครั้งถัดไป; **ช่องว่างที่เหลือ**: Contentful ต้องมี webhook route (ยังไม่ทำ) ที่ตรวจ secret แล้วเรียก `revalidateQuizContent`
 
 ### Database (migration 09)
 

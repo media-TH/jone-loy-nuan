@@ -12,6 +12,7 @@ import {
 	RETENTION_JOB,
 	consentFieldName,
 	controllerValue,
+	assertControllerConfiguredForProduction,
 	erasableClientKeys,
 	isControllerConfigured,
 } from "@/lib/privacy/policy";
@@ -170,6 +171,18 @@ describe("controller contact", () => {
 		expect(isControllerConfigured(complete)).toBe(true);
 		expect(isControllerConfigured({ ...complete, address: " " })).toBe(false);
 		expect(isControllerConfigured({ ...complete, email: null })).toBe(false);
+	});
+
+	it("blocks a Vercel production build until the controller is filled in (s.23(5))", () => {
+		const missing = { name: null, address: null, email: null, dpoEmail: null };
+		const complete = { name: "หน่วยงาน", address: "ที่อยู่", email: "privacy@example.org", dpoEmail: null };
+
+		expect(() => assertControllerConfiguredForProduction({ VERCEL_ENV: "production" }, missing)).toThrow(
+			/CONTROLLER/,
+		);
+		expect(() => assertControllerConfiguredForProduction({ VERCEL_ENV: "production" }, complete)).not.toThrow();
+		expect(() => assertControllerConfiguredForProduction({ VERCEL_ENV: "preview" }, missing)).not.toThrow();
+		expect(() => assertControllerConfiguredForProduction({}, missing)).not.toThrow();
 	});
 });
 

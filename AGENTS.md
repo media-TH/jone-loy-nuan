@@ -38,12 +38,21 @@ Use `pnpm` (see `package.json`).
 
 For animation code and animation-related boolean logic:
 
-- Use `any` or `Record<string, any>` for animation configs (GSAP, Framer Motion variants, CSS-in-JS).
+- Use `any` or `Record<string, any>` for animation configs (GSAP, Motion (`motion/react`) variants, CSS-in-JS).
 - Allow implicit boolean conversions; avoid strict `=== true` / `=== false` checks.
 - Don’t enforce exact property names or literal types in animation objects.
 - Prioritize flexibility over type safety in animation logic; keep strict typing for data/API boundaries.
 
 Examples: `const animate = (el: HTMLElement, config: any) => gsap.to(el, config)`; `if (isAnimating && !paused) { ... }`. Avoid strict interfaces/literal types for animation-only configs.
+
+## Design System & Motion
+
+- Tokens live in `app/globals.css` (CSS variables + Tailwind utilities such as `bg-surface`, `text-ink`, `bg-spark`, `type-title`, `shadow-raised`, `duration-(--dur-quick)`, `z-(--layer-sheet)`); they mirror the สแกนโจร Design System artifact. Use the semantic utilities only: no raw hex, no default palette classes (`bg-blue-500`), no gradients, no purple, no emoji in UI.
+- `components/ds/*` are the building blocks (Button, AnswerOption, ScenarioFrame, RedFlagPin, ResultSheet, ProgressRail, RiskMeter, ScoreNumeral, Field, ChoiceChips, ConsentPanel, …): `cva` + `cn`, `focus-ring`, 44px minimum touch target. Status is always word + icon + colour, never colour alone.
+- Motion: import from `motion/react` only (the `framer-motion` import is banned) and render `m.*` (`LazyMotion` + `MotionConfig reducedMotion="user"` wrap the app in `components/motion/motion-provider.tsx`). Durations, easings and springs come from `lib/motion/tokens.ts`; reuse the variants in `lib/motion/presets.ts`.
+- Only the 8 moments animate: Scan Wipe (route change), Scan Reveal (scenario enters), Flag Plant (red-flag pins), answer feedback, Result Sheet, Progress Rail indicator, score count-up + risk needle, and CTA micro-interactions. Nothing else.
+- Reduced motion: transform/layout animation drops out and opacity/colour stays; purely decorative motion is hidden with CSS (`motion-reduce:hidden`), never by rendering different markup from `useReducedMotion()` (it is `null` on the server, so the hydrating render would not match).
+- Never server-render a page's main content at opacity 0 (it holds back LCP until hydration): first paint shows content at rest, and enter animations only run on client-side navigations.
 
 ## Testing Guidelines
 

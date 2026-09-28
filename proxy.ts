@@ -19,7 +19,8 @@ export const config = {
 		 * - _next/static, _next/image (build output, image optimizer)
 		 * - api/health, api/cron (public liveness + secret-authenticated jobs; no session needed)
 		 * - favicon, robots, sitemap, web manifest and any static asset by extension
+		 * - generated Open Graph images (/opengraph-image, /learn/…/opengraph-image-<hash>, /s/…)
 		 */
-		"/((?!_next/static|_next/image|api/health|api/cron|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|ttf|otf|mp4|webm|txt|xml|webmanifest)$).*)",
+		"/((?!_next/static|_next/image|api/health|api/cron|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|.*opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|ttf|otf|mp4|webm|txt|xml|webmanifest)$).*)",
 	],
 };

@@ -4,6 +4,7 @@ import { IconBooks, IconScan } from "@tabler/icons-react";
 import { Button } from "@/components/ds/button";
 import { StatusBadge } from "@/components/ds/status-badge";
 import { TransitionLink } from "@/components/motion/scan-transition";
+import { PrivacyNote } from "@/components/privacy/privacy-note";
 import { RISK_COPY } from "@/lib/quiz/risk";
 import { shareLandingRobots } from "@/lib/seo/metadata";
 import { SHARE_SCORES, SHARE_TOTAL, getShareRiskLevel, parseShareScore } from "@/lib/seo/share";
@@ -86,6 +87,7 @@ export default async function ShareScorePage({ params }: PageProps) {
 							อ่านวิธีสังเกตกลโกง
 						</TransitionLink>
 					</Button>
+					<PrivacyNote />
 				</div>
 			</div>
 		</main>

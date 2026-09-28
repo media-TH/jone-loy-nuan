@@ -161,10 +161,10 @@ sequenceDiagram
 | Phase | งาน | อ้างอิง |
 | --- | --- | --- |
 | 1 (ต่อทันที) | บันทึกคำตอบรายข้อ (`question_responses`) จาก flow ใหม่ ซึ่ง analytics ของ admin ใช้อยู่ (`store/quiz-store.ts` มี `saveQuizSummaryToApi` แต่ไม่มีใครเรียก) | หมายเหตุด้านบน |
-| 1 | ลบไฟล์ `framer-motion` ที่ไม่มีใครใช้ + `lib/motion/quiz-motion.ts`, ถอด `framer-motion` จาก `package.json`, เปิด `LazyMotion strict` | ADR-002 |
-| 1 | เรียก `revalidateQuizContent()` จาก Server Actions ของ admin หลังแก้คำถาม | ADR-003 |
-| 1 | ใช้ `safeRedirectPath()` ใน `app/(main)/login/action.ts`; ใช้ `ADMIN_EMAILS` ใน admin layout ด้วย | ADR-005 |
-| 1 | ตรวจ path Edge Function (`/functions/v2/` ในโค้ด) และสถานะ RLS ของ `questions` / `answers` ใน production | ADR-005 |
+| 1 | ~~ลบไฟล์ legacy + ถอดแพ็กเกจเดิมจาก `package.json`~~ ทำแล้ว; เหลือเปิด `LazyMotion strict` | ADR-002 |
+| 1 | ~~เรียก revalidate จาก Server Actions ของ admin หลังแก้คำถาม~~ ทำแล้ว (`revalidateAllContent()` ใน `lib/actions/questions.ts`, `images.ts`) | ADR-003 |
+| 1 | ~~ใช้ `safeRedirectPath()` ใน login; ใช้ `ADMIN_EMAILS` ใน admin layout~~ ทำแล้ว; ตั้ง `ADMIN_EMAILS` ใน production (บังคับ) และปิด sign-up ใน Supabase Auth | ADR-005 |
+| 1 | ~~path Edge Function~~ แก้เป็น `/functions/v1/` แล้ว; deploy migration 10 (RLS `questions` / `answers` / view ที่มี id) และตรวจสถานะใน production | ADR-005 |
 | 2 | Supabase Anonymous Sign-Ins + Turnstile แทน `issue-anon-jwt`; ย้ายการคิดคะแนนไป server | ADR-005 |
 | 2 | Vercel Firewall rate limit, nonce CSP, หมุน key | ADR-005 |
 | 2 | กรอก `CONTROLLER` (TODO(legal)), DPA กับ Supabase/Vercel, ตั้ง region สิงคโปร์ | ADR-006 |

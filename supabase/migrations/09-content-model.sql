@@ -255,6 +255,7 @@ using (true);
 -- ----------------------------------------
 -- Same columns as before plus three new ones at the end (callers select by name, so this is
 -- backward compatible). Changing a function's result columns needs drop + create.
+-- Returns questions of published quizzes only (the admin portal lists the same set).
 -- The deployed function may differ from 02 (it already returns kpi_category); keep its security
 -- mode (invoker/definer) as it is, so anon reads keep working exactly as before.
 drop table if exists pg_temp.content_model_rpc_security;
@@ -333,6 +334,9 @@ as $$
       '[]'::jsonb
     ) as red_flags
   from public.questions q
+  -- Published quizzes only: draft campaign content (and its answer key) stays private until
+  -- launch, whether this function runs as invoker or definer.
+  join public.quizzes qz on qz.id = q.quiz_id and qz.status = 'published'
   order by q.order_index;
 $$;
 
