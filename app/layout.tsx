@@ -1,19 +1,38 @@
-import type { Metadata } from "next";
-import { Inter, Prompt } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Chakra_Petch, IBM_Plex_Mono, IBM_Plex_Sans_Thai_Looped } from "next/font/google";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import "./globals.css";
 
-const inter = Inter({
-	variable: "--font-inter",
-	subsets: ["latin"],
+/** Display: headlines, numerals, labels (Thai + Latin, angular "scanner" voice). */
+const chakra = Chakra_Petch({
+	variable: "--font-chakra",
+	subsets: ["thai", "latin"],
+	weight: ["600", "700"],
 	display: "swap",
 });
 
-const prompt = Prompt({
-	variable: "--font-prompt",
+/** Body: looped Thai for the most legible running text, including for older readers. */
+const plexLooped = IBM_Plex_Sans_Thai_Looped({
+	variable: "--font-plex-looped",
 	subsets: ["thai", "latin"],
-	weight: ["300", "400", "500", "600", "700"],
+	weight: ["400", "500", "600"],
 	display: "swap",
 });
+
+/** Evidence: phone numbers, URLs, account numbers, sender IDs. */
+const plexMono = IBM_Plex_Mono({
+	variable: "--font-plex-mono",
+	subsets: ["latin"],
+	weight: ["400", "500"],
+	display: "swap",
+});
+
+export const viewport: Viewport = {
+	width: "device-width",
+	initialScale: 1,
+	viewportFit: "cover",
+	themeColor: "#f5f9ff",
+};
 
 export const metadata: Metadata = {
 	title: "สแกนโจร.online - แบบทดสอบความรู้เท่าทันมิจฉาชีพ",
@@ -98,15 +117,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="th">
-			<meta
-				name="viewport"
-				content="width=device-width, initial-scale=1, viewport-fit=cover"
-			/>
-			<body
-				className={`${inter.variable} ${prompt.variable} font-sans antialiased`}
-			>
-				{children}
+		<html
+			lang="th"
+			className={`${chakra.variable} ${plexLooped.variable} ${plexMono.variable}`}
+		>
+			<body className="font-sans antialiased">
+				<MotionProvider>{children}</MotionProvider>
 			</body>
 		</html>
 	);
