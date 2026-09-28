@@ -1,19 +1,25 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
-	return await updateSession(request);
+	try {
+		return await updateSession(request);
+	} catch (error) {
+		// updateSession already fails soft; this is the last line of defence so a bug in the
+		// session refresh can never take the public site down.
+		console.error("[proxy] unexpected error", error);
+		return NextResponse.next({ request });
+	}
 }
 
 export const config = {
 	matcher: [
 		/*
-		 * Match all request paths except for the ones starting with:
-		 * - _next/static (static files)
-		 * - _next/image (image optimization files)
-		 * - favicon.ico (favicon file)
-		 * Feel free to modify this pattern to include more paths.
+		 * Run on pages and app API routes only. Skip:
+		 * - _next/static, _next/image (build output, image optimizer)
+		 * - api/health, api/cron (public liveness + secret-authenticated jobs; no session needed)
+		 * - favicon, robots, sitemap, web manifest and any static asset by extension
 		 */
-		"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+		"/((?!_next/static|_next/image|api/health|api/cron|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|ttf|otf|mp4|webm|txt|xml|webmanifest)$).*)",
 	],
 };

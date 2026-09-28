@@ -1,6 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Chakra_Petch, IBM_Plex_Mono, IBM_Plex_Sans_Thai_Looped } from "next/font/google";
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { JsonLd } from "@/lib/seo/json-ld";
+import { baseOpenGraph, siteRobots } from "@/lib/seo/metadata";
+import {
+	PUBLISHERS,
+	SITE_DESCRIPTION,
+	SITE_NAME,
+	SITE_TAGLINE,
+	SITE_URL,
+} from "@/lib/seo/site";
+import { siteJsonLd } from "@/lib/seo/structured-data";
 import "./globals.css";
 
 /** Display: headlines, numerals, labels (Thai + Latin, angular "scanner" voice). */
@@ -35,80 +45,51 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-	title: "สแกนโจร.online - แบบทดสอบความรู้เท่าทันมิจฉาชีพ",
-	description:
-		"เรียนรู้วิธีป้องกันตัวเองจากการโกงออนไลน์ ผ่านแบบทดสอบที่เข้าใจง่าย พร้อมสถานการณ์จำลองที่ใกล้เคียงชีวิตจริง",
+	metadataBase: new URL(SITE_URL),
+	title: {
+		default: `${SITE_NAME} - ${SITE_TAGLINE}`,
+		template: `%s | ${SITE_NAME}`,
+	},
+	description: SITE_DESCRIPTION,
+	applicationName: SITE_NAME,
 	keywords: [
 		"การโกงออนไลน์",
 		"มิจฉาชีพ",
+		"แก๊งคอลเซ็นเตอร์",
 		"แบบทดสอบ",
 		"ความปลอดภัย",
 		"ธนาคารแห่งประเทศไทย",
 		"กองทุนพัฒนาสื่อ",
 	],
-	authors: [{ name: "Bank of Thailand" }, { name: "Thai Media Fund" }],
-	creator: "Bank of Thailand",
-	publisher: "Bank of Thailand",
+	authors: PUBLISHERS.map((org) => ({ name: org.alternateName, url: org.url })),
+	creator: PUBLISHERS[0].alternateName,
+	publisher: PUBLISHERS[0].alternateName,
 	formatDetection: {
 		email: false,
 		address: false,
 		telephone: false,
 	},
-	metadataBase: new URL("https://xn--12co4czb5a2kj.online"),
+	// "./" resolves against each page's own path: every page is its own canonical by default.
 	alternates: {
-		canonical: "/",
+		canonical: "./",
 	},
+	// app/favicon.ico and app/manifest.ts are linked automatically by their file conventions.
 	icons: {
 		icon: [
-			{ url: "/favicon.ico" },
-			{ url: "/icon-16x16.png", sizes: "16x16", type: "image/png" },
-			{ url: "/icon-32x32.png", sizes: "32x32", type: "image/png" },
+			{ url: "/favicon.svg", type: "image/svg+xml" },
+			{ url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
 		],
-		apple: [
-			{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-		],
-		other: [
-			{ rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#5bbad5" },
-		],
+		apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
 	},
-	manifest: "/site.webmanifest",
-	openGraph: {
-		title: "สแกนโจร.online - แบบทดสอบความรู้เท่าทันมิจฉาชีพ",
-		description:
-			"เรียนรู้วิธีป้องกันตัวเองจากการโกงออนไลน์ ผ่านแบบทดสอบที่เข้าใจง่าย",
-		url: "https://xn--12co4czb5a2kj.online",
-		siteName: "สแกนโจร.online",
-		locale: "th_TH",
-		type: "website",
-		images: [
-			{
-				url: "/og-image.jpg",
-				width: 1200,
-				height: 630,
-				alt: "สแกนโจร.online - แบบทดสอบความรู้เท่าทันมิจฉาชีพ",
-			},
-		],
-	},
+	// Images come from app/opengraph-image.tsx (and per-route opengraph-image files).
+	openGraph: baseOpenGraph,
 	twitter: {
 		card: "summary_large_image",
-		title: "สแกนโจร.online - แบบทดสอบความรู้เท่าทันมิจฉาชีพ",
-		description: "เรียนรู้วิธีป้องกันตัวเองจากการโกงออนไลน์",
-		images: ["/og-image.jpg"],
 	},
-	robots: {
-		index: true,
-		follow: true,
-		googleBot: {
-			index: true,
-			follow: true,
-			"max-video-preview": -1,
-			"max-image-preview": "large",
-			"max-snippet": -1,
-		},
-	},
-	verification: {
-		google: "your-google-verification-code",
-	},
+	robots: siteRobots,
+	...(process.env.GOOGLE_SITE_VERIFICATION
+		? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+		: {}),
 };
 
 export default function RootLayout({
@@ -122,6 +103,7 @@ export default function RootLayout({
 			className={`${chakra.variable} ${plexLooped.variable} ${plexMono.variable}`}
 		>
 			<body className="font-sans antialiased">
+				<JsonLd data={siteJsonLd()} />
 				<MotionProvider>{children}</MotionProvider>
 			</body>
 		</html>

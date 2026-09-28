@@ -1,0 +1,88 @@
+# Supabase free-tier keep-alive (backup).
+#
+# Supabase pauses a free project after 7 days without activity. The PRIMARY keep-alive is the Vercel
+# Cron in vercel.json (daily GET /api/cron/keepalive). This workflow is the backup, every 2 days:
+#   1. calls the same app route (proves the app and the database are both up), and
+#   2. calls the database function directly through the Supabase REST API, so the database stays
+#      awake even when the app is down or its deployment is broken.
+# The job fails only when neither step succeeded.
+#
+# Repository secrets (Settings -> Secrets and variables -> Actions); each step is skipped when its
+# secrets are missing:
+#   KEEPALIVE_URL              https://<your-domain>/api/cron/keepalive
+#   CRON_SECRET                same value as the CRON_SECRET env var on Vercel
+#   SUPABASE_URL               https://<project-ref>.supabase.co            (optional, step 2)
+#   SUPABASE_SERVICE_ROLE_KEY  service_role key or sb_secret_... key        (optional, step 2)
+#
+# NOTE: GitHub automatically disables scheduled workflows in public repositories after 60 days
+# without repository activity. That is why Vercel Cron is primary; re-enable this workflow from the
+# Actions tab if GitHub turns it off. A project that is already paused is not woken by either
+# ping: restore it from the Supabase dashboard.
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "23 1 */2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      KEEPALIVE_URL: ${{ secrets.KEEPALIVE_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Ping app keep-alive route
+        id: app
+        if: ${{ env.KEEPALIVE_URL != '' && env.CRON_SECRET != '' }}
+        continue-on-error: true
+        run: |
+          curl -fsS --retry 3 --retry-all-errors --retry-delay 10 --max-time 30 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${KEEPALIVE_URL}"
+          echo
+
+      - name: Ping Supabase directly (REST rpc keepalive_ping)
+        id: db
+        if: ${{ env.SUPABASE_URL != '' && env.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        continue-on-error: true
+        run: |
+          # Legacy service_role keys are JWTs and also go in Authorization; new sb_secret_ keys only need apikey.
+          AUTH_HEADER=()
+          case "${SUPABASE_SERVICE_ROLE_KEY}" in
+            eyJ*) AUTH_HEADER=(-H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}") ;;
+          esac
+          curl -fsS --retry 3 --retry-all-errors --retry-delay 10 --max-time 30 \
+            -X POST "${SUPABASE_URL%/}/rest/v1/rpc/keepalive_ping" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            "${AUTH_HEADER[@]}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+          echo
+
+      - name: Verdict
+        if: ${{ always() }}
+        env:
+          APP_OUTCOME: ${{ steps.app.outcome }}
+          DB_OUTCOME: ${{ steps.db.outcome }}
+        run: |
+          echo "app route: ${APP_OUTCOME:-skipped} | direct rpc: ${DB_OUTCOME:-skipped}"
+          if [ "${APP_OUTCOME}" = "failure" ]; then
+            echo "::warning::App keep-alive route failed; check the deployment and CRON_SECRET."
+          fi
+          if [ "${APP_OUTCOME}" = "success" ] || [ "${DB_OUTCOME}" = "success" ]; then
+            exit 0
+          fi
+          echo "::error::No keep-alive ping succeeded. Configure KEEPALIVE_URL + CRON_SECRET and/or SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY secrets."
+          exit 1
