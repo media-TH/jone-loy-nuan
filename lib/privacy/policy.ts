@@ -336,11 +336,11 @@ export type ControllerDetails = {
  */
 export const CONTROLLER: ControllerDetails = {
 	// Required: the person or team that runs the project (a named individual can be the controller).
-	name: "ธนาคารแห่งประเทศไทย",
+	name: null,
 	// Optional: leave null when there is no postal address to publish; the row is then hidden.
-	address: "สำนักงานใหญ่ 273 ถนนสามเสน แขวงวัดสามพระยา เขตพระนคร กรุงเทพฯ 10200",
+	address: null,
 	// Required: an inbox someone reads, for data subject requests.
-	email: "contact@bot.or.th",
+	email: null,
 	// Optional: only when a DPO is appointed (s.41); the row is hidden otherwise.
 	dpoEmail: null,
 };
