@@ -1,7 +1,9 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { revalidateAllContent } from "@/lib/content/supabase-source";
+import { assertAdmin } from "@/lib/security/require-admin";
 
 export async function uploadQuestionImages(
 	previousState: { error?: string; success?: boolean } | null,
@@ -18,9 +20,10 @@ export async function uploadQuestionImages(
 		return { error: "Please provide at least one image file." };
 	}
 
-	const supabase = await createClient();
-
 	try {
+		// Service role behind the admin gate: scenario_images allows public SELECT only (migration 10).
+		await assertAdmin();
+		const supabase = createAdminClient();
 		if (normalFile && normalFile.size > 0) {
 			await uploadVariant(supabase, questionId, normalFile, "normal");
 		}
@@ -34,11 +37,13 @@ export async function uploadQuestionImages(
 
 	revalidatePath(`/mgmt-portal/quizzes/${questionId}/images`);
 	revalidatePath("/mgmt-portal");
+	revalidateAllContent();
+	revalidatePath("/quiz");
 	return { success: true };
 }
 
 async function uploadVariant(
-	supabase: Awaited<ReturnType<typeof createClient>>,
+	supabase: ReturnType<typeof createAdminClient>,
 	questionId: string,
 	file: File,
 	variant: "normal" | "result"

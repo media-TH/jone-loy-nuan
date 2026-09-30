@@ -1,0 +1,95 @@
+/**
+ * The 77 provinces of Thailand (76 จังหวัด + กรุงเทพมหานคร), in Thai dictionary order with Bangkok
+ * first, the order people expect in a picker.
+ *
+ * The survey stores the province name exactly as written here (survey_responses.province), so the
+ * list doubles as the closed set the server validates against: free text is never accepted.
+ * Province is the finest location we collect (data minimisation): no district, postcode or address.
+ */
+export const THAI_PROVINCES = [
+	"กรุงเทพมหานคร",
+	"กระบี่",
+	"กาญจนบุรี",
+	"กาฬสินธุ์",
+	"กำแพงเพชร",
+	"ขอนแก่น",
+	"จันทบุรี",
+	"ฉะเชิงเทรา",
+	"ชลบุรี",
+	"ชัยนาท",
+	"ชัยภูมิ",
+	"ชุมพร",
+	"เชียงราย",
+	"เชียงใหม่",
+	"ตรัง",
+	"ตราด",
+	"ตาก",
+	"นครนายก",
+	"นครปฐม",
+	"นครพนม",
+	"นครราชสีมา",
+	"นครศรีธรรมราช",
+	"นครสวรรค์",
+	"นนทบุรี",
+	"นราธิวาส",
+	"น่าน",
+	"บึงกาฬ",
+	"บุรีรัมย์",
+	"ปทุมธานี",
+	"ประจวบคีรีขันธ์",
+	"ปราจีนบุรี",
+	"ปัตตานี",
+	"พระนครศรีอยุธยา",
+	"พะเยา",
+	"พังงา",
+	"พัทลุง",
+	"พิจิตร",
+	"พิษณุโลก",
+	"เพชรบุรี",
+	"เพชรบูรณ์",
+	"แพร่",
+	"ภูเก็ต",
+	"มหาสารคาม",
+	"มุกดาหาร",
+	"แม่ฮ่องสอน",
+	"ยโสธร",
+	"ยะลา",
+	"ร้อยเอ็ด",
+	"ระนอง",
+	"ระยอง",
+	"ราชบุรี",
+	"ลพบุรี",
+	"ลำปาง",
+	"ลำพูน",
+	"เลย",
+	"ศรีสะเกษ",
+	"สกลนคร",
+	"สงขลา",
+	"สตูล",
+	"สมุทรปราการ",
+	"สมุทรสงคราม",
+	"สมุทรสาคร",
+	"สระแก้ว",
+	"สระบุรี",
+	"สิงห์บุรี",
+	"สุโขทัย",
+	"สุพรรณบุรี",
+	"สุราษฎร์ธานี",
+	"สุรินทร์",
+	"หนองคาย",
+	"หนองบัวลำภู",
+	"อ่างทอง",
+	"อำนาจเจริญ",
+	"อุดรธานี",
+	"อุตรดิตถ์",
+	"อุทัยธานี",
+	"อุบลราชธานี",
+] as const;
+
+export type Province = (typeof THAI_PROVINCES)[number];
+
+const PROVINCE_SET: ReadonlySet<string> = new Set(THAI_PROVINCES);
+
+export function isProvince(value: unknown): value is Province {
+	return typeof value === "string" && PROVINCE_SET.has(value);
+}

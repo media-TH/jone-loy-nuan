@@ -1,85 +1,124 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { useQuizAnimations } from "@/hooks/useQuizAnimations";
 import Image from "next/image";
+import Link from "next/link";
+import {
+	IconBooks,
+	IconClockHour3,
+	IconListNumbers,
+	IconScan,
+	IconUserOff,
+} from "@tabler/icons-react";
+import { Button } from "@/components/ds/button";
+import { ScanReveal } from "@/components/motion/scan-reveal";
+import { TransitionLink } from "@/components/motion/scan-transition";
+import { PRIVACY_PATH } from "@/lib/privacy/policy";
+import { PUBLISHERS } from "@/lib/seo/site";
 
-export default function Home() {
-	const { getLandingPageAnimation } = useQuizAnimations(false);
-	const landingAnimation = getLandingPageAnimation();
+/**
+ * Landing — "Scan & Flag". A static server component: the wordmark, cover and CTA are in the
+ * first HTML response, fully visible (no opacity-0 hero), so the cover can be the LCP element.
+ * The only motion is one Scan Reveal pass over the cover; client-side navigations get the
+ * (main) template's enter animation.
+ */
 
+const FACTS = [
+	{ id: "scenarios", Icon: IconListNumbers, text: "10 สถานการณ์" },
+	{ id: "time", Icon: IconClockHour3, text: "ประมาณ 3 นาที" },
+	{ id: "anonymous", Icon: IconUserOff, text: "ไม่ต้องสมัคร ไม่เก็บชื่อ" },
+] as const;
+
+type PublisherId = (typeof PUBLISHERS)[number]["id"];
+
+/** Partner marks in the order of the original artwork (TMF left, BoT right); alt text from PUBLISHERS. */
+const PARTNER_LOGOS: ReadonlyArray<{ id: PublisherId; src: string; width: number; height: number }> = [
+	{ id: "tmf", src: "/Logo_TMF_left.svg", width: 1151, height: 422 },
+	{ id: "bot", src: "/Logo_BoT_right.svg", width: 240, height: 128 },
+];
+
+function publisherName(id: PublisherId): string {
+	return PUBLISHERS.find((publisher) => publisher.id === id)?.name ?? "";
+}
+
+export default function HomePage() {
 	return (
-		<motion.div
-			className="min-h-screen bg-blue-50 px-4 py-8 flex flex-col justify-center items-center w-full safe-height pb-8"
-			{...landingAnimation.container}
-		>
-			<div className="relative z-10 flex flex-col items-center w-full max-w-sm -mt-20">
-				{/* Header Section */}
-				<motion.div className="text-center mb-8" {...landingAnimation.title}>
-					<motion.h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-2 -mt-8">
-						สแกนโจร.online
-					</motion.h1>
-					<motion.p
-						className="text-blue-900 text-base font-medium"
-						{...landingAnimation.subtitle}
-					>
-						แบบทดสอบความรู้เท่าทันมิจฉาชีพ
-					</motion.p>
-				</motion.div>
+		<main id="main" className="min-h-screen bg-surface text-ink">
+			<div className="mx-auto flex w-full max-w-[30rem] flex-col gap-8 px-4 pt-10 pb-8 sm:px-6 sm:pt-14">
+				<header className="flex flex-col items-center gap-2 text-center">
+					<h1 className="type-display-xl text-ink">
+						สแกนโจร<span className="text-brand">.online</span>
+					</h1>
+					<p className="type-body-lg text-balance text-ink-muted">
+						ดูสถานการณ์จำลอง ตัดสินใจ แล้วดูว่า<span className="whitespace-nowrap">ธงแดง</span>
+						ของมิจฉาชีพซ่อนอยู่ตรงไหน
+					</p>
+				</header>
 
-				{/* Main Illustration */}
-				<motion.div
-					className="relative mb-8 w-full aspect-square overflow-hidden -mt-10"
-					{...landingAnimation.card}
-				>
+				{/* Capped by viewport height so "เริ่มสแกน" stays above the fold on short phones. */}
+				<ScanReveal className="mx-auto w-full max-w-[min(100%,44svh)] rounded-lg">
 					<Image
 						src="/cover-01.svg"
-						alt="สแกนโจร.online"
-						fill
-						className="object-contain p-4"
+						alt="ภาพประกอบ: ชายคนหนึ่งใช้แว่นขยายส่องหน้าจอโทรศัพท์ และพบมิจฉาชีพแอบซ่อนอยู่หลังข้อความ"
+						width={1080}
+						height={1080}
+						preload
+						sizes="(min-width: 30rem) 28rem, calc(100vw - 2rem)"
+						className="h-auto w-full"
 					/>
-				</motion.div>
+				</ScanReveal>
 
-				{/* CTA Button */}
-				<motion.div className="w- mb-8 px-8" {...landingAnimation.cta}>
-					<Button
-						asChild
-						className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-semibold rounded-full"
-						size="xl"
-					>
-						<Link href="/quiz">เริ่มทำแบบทดสอบ</Link>
-					</Button>
-				</motion.div>
-
-				{/* Footer with Logos */}
-				<motion.div
-					className="w-full h-24 flex items-center justify-between bg-white rounded-2xl px-6 -py-4 shadow-md"
-					{...landingAnimation.footer}
+				<ul
+					role="list"
+					aria-label="เกี่ยวกับแบบทดสอบ"
+					className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
 				>
-					<div className="flex-1 flex items-center justify-center">
-						<Image
-							src="/Logo_TMF_left.svg"
-							alt="กองทุนพัฒนาสื่อ ปลอดภัยและสร้างสรรค์"
-							width={0}
-							height={0}
-							quality={100}
-							className="w-auto h-full object-contain -py-6"
-						/>
-					</div>
-					<div className="flex-1 flex items-center justify-center">
-						<Image
-							src="/Logo_BoT_right.svg"
-							alt="ธนาคารแห่งประเทศไทย"
-							width={0}
-							height={0}
-							quality={100}
-							className="w-auto h-full object-contain max-w-[70%]"
-						/>
-					</div>
-				</motion.div>
+					{FACTS.map(({ id, Icon, text }) => (
+						<li key={id} className="inline-flex items-center gap-1.5 type-body-sm font-medium text-ink">
+							<Icon aria-hidden stroke={2.25} className="size-5 shrink-0 text-brand" />
+							{text}
+						</li>
+					))}
+				</ul>
+
+				<div className="flex flex-col gap-3">
+					<Button asChild variant="spark" size="lg" block>
+						<TransitionLink href="/quiz">
+							<IconScan aria-hidden stroke={2.25} />
+							เริ่มสแกน
+						</TransitionLink>
+					</Button>
+					<Button asChild variant="quiet" size="md" block>
+						<TransitionLink href="/learn">
+							<IconBooks aria-hidden stroke={2.25} />
+							เรียนรู้กลโกงยอดฮิต
+						</TransitionLink>
+					</Button>
+				</div>
+
+				<footer className="flex flex-col items-center gap-4 border-t border-line pt-6">
+					<p className="type-label text-ink-muted">ร่วมพัฒนาโดย</p>
+					<ul
+						role="list"
+						className="flex w-full items-center justify-center gap-6 rounded-md bg-surface-raised px-6 py-4 shadow-raised"
+					>
+						{PARTNER_LOGOS.map((logo) => (
+							<li key={logo.id} className="flex min-w-0 items-center justify-center">
+								<Image
+									src={logo.src}
+									alt={publisherName(logo.id)}
+									width={logo.width}
+									height={logo.height}
+									className="h-12 w-auto max-w-full object-contain"
+								/>
+							</li>
+						))}
+					</ul>
+					<Link
+						href={PRIVACY_PATH}
+						className="focus-ring -mx-1 inline-flex min-h-11 items-center rounded-xs px-1 type-body-sm text-brand underline decoration-2 underline-offset-4 hover:decoration-4"
+					>
+						ประกาศความเป็นส่วนตัว
+					</Link>
+				</footer>
 			</div>
-		</motion.div>
+		</main>
 	);
 }

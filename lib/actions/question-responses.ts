@@ -198,49 +198,6 @@ export async function getQuestionResponses(quizSessionId: string) {
 }
 
 /**
- * 📈 Get KPI summary for a quiz session
- * Calculate real-time KPI scores
- */
-export async function getQuizKPISummary(quizSessionId: string) {
-	try {
-		if (!quizSessionId) {
-			throw new Error("ต้องระบุ quiz session ID");
-		}
-
-		const supabase = await createClient();
-		const { data, error } = await supabase
-			.from("quiz_kpi_summary")
-			.select("*")
-			.eq("quiz_session_id", quizSessionId)
-			.single();
-
-		if (error) {
-			if (error.code === 'PGRST116') {
-				return {
-					success: false,
-					message: "ไม่พบข้อมูล KPI สำหรับเซสชันนี้",
-					data: null
-				};
-			}
-			throw error;
-		}
-
-		return {
-			success: true,
-			data: data,
-			message: "ดึงข้อมูล KPI สำเร็จ!"
-		};
-	} catch (error: unknown) {
-		const err = error as Error;
-		return {
-			success: false,
-			message: err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูล KPI",
-			data: null
-		};
-	}
-}
-
-/**
  * 🎯 Update quiz session progress in real-time
  * Called after each question response to keep session data current
  */

@@ -22,7 +22,8 @@ function getEdgeFunctionUrl(): string {
 	const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
 	if (!base) throw new Error("NEXT_PUBLIC_SUPABASE_URL is required for anon JWT");
 	const name = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN_FUNCTION ?? DEFAULT_FUNCTION_NAME;
-	return `${base.replace(/\/$/, "")}/functions/v2/${name}`;
+	// Supabase serves Edge Functions under /functions/v1/<name>.
+	return `${base.replace(/\/$/, "")}/functions/v1/${name}`;
 }
 
 /** Decode JWT payload to get sub (anon_user_id) when Edge Function doesn't return it. */

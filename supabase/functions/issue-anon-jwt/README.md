@@ -21,10 +21,12 @@ supabase functions deploy issue-anon-jwt --no-verify-jwt --project-ref tbyjrjdmx
 ## Env (ตั้งใน Dashboard → Edge Functions → issue-anon-jwt → Settings)
 
 - **SECRET_KEY** หรือ **ANON_JWT_SECRET** — ต้องเป็น **Project JWT Secret** (Dashboard → API → JWT Secret) ถึงจะให้ RLS ใช้ `auth.jwt()` ได้
-- **SUPABASE_SERVICE_ROLE_KEY** — ใช้เป็น fallback ได้ แต่ RLS อาจไม่เห็น JWT
-- **TOKEN_TTL_SECONDS** (optional, default 86400 = 1 วัน)
+- ไม่ใช้ **SUPABASE_SERVICE_ROLE_KEY** เป็น secret สำหรับเซ็น (เป็น API key ไม่ใช่ JWT secret)
+- **TOKEN_TTL_SECONDS** (optional, default 86400 = 1 วัน, บีบให้อยู่ระหว่าง 300–86400)
+
+Function สุ่ม `anon_user_id` เองทุกครั้งและไม่อ่าน body: ห้ามเพิ่มช่องให้ client ระบุ id เพราะ token คือหลักฐานตัวตนที่ใช้ถอนความยินยอมและลบข้อมูล
 
 ## หลัง deploy
 
-URL จะเป็น: `https://tbyjrjdmxujwqvdgqdxp.supabase.co/functions/v2/issue-anon-jwt`  
+URL จะเป็น: `https://tbyjrjdmxujwqvdgqdxp.supabase.co/functions/v1/issue-anon-jwt`  
 App เรียก URL นี้อยู่แล้ว (จาก NEXT_PUBLIC_SUPABASE_URL) ไม่ต้องแก้ env

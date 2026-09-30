@@ -1,6 +1,10 @@
-import { NextResponse } from "next/server"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { requireAdmin } from "@/lib/security/require-admin"
+import { noStoreJson } from "@/lib/security/responses"
+
+// Reads a local file on every request: never prerender or cache.
+export const dynamic = "force-dynamic"
 
 type MdResponse = {
   question_id: string
@@ -9,14 +13,27 @@ type MdResponse = {
   created_at?: string
 }
 
+function isMdResponse(value: unknown): value is MdResponse {
+  if (typeof value !== "object" || value === null) return false
+  const r = value as Record<string, unknown>
+  return (
+    typeof r.question_id === "string" &&
+    typeof r.is_correct === "boolean" &&
+    (r.kpi_category === undefined || typeof r.kpi_category === "string")
+  )
+}
+
 export async function GET() {
+  const admin = await requireAdmin()
+  if (!admin.ok) return admin.response
+
   try {
     const filePath = path.join(process.cwd(), "quiz_response.md")
     const raw = await fs.readFile(filePath, "utf8")
 
     const codeBlocks = Array.from(raw.matchAll(/```json\s*([\s\S]*?)\s*```/g))
     if (!codeBlocks.length) {
-      return NextResponse.json(
+      return noStoreJson(
         {
           error: "No JSON code block found in quiz_response.md",
           hint: "Add a ```json ... ``` block with an array of responses",
@@ -30,7 +47,9 @@ export async function GET() {
     }
 
     const jsonText = codeBlocks[0][1]
-    const data = JSON.parse(jsonText) as MdResponse[]
+    const parsed: unknown = JSON.parse(jsonText)
+    // Drop malformed rows instead of letting one bad entry fail the whole report.
+    const data = Array.isArray(parsed) ? parsed.filter(isMdResponse) : []
 
     // Compute wrong counts per question
     const wrongMap = new Map<string, { question_id: string; wrong_count: number; total_attempts: number }>()
@@ -71,10 +90,14 @@ export async function GET() {
       is_target_met: v.total ? Math.round((v.correct / v.total) * 100) >= 80 : false,
     }))
 
-    return NextResponse.json({ questionWrongCounts, kpiSummary }, { status: 200 })
+    return noStoreJson({ questionWrongCounts, kpiSummary }, { status: 200 })
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error"
-    return NextResponse.json({ error: message }, { status: 500 })
+    // Details (file paths, parser errors) stay in the server log.
+    console.error("[api/analytics/from-md]", e)
+    return noStoreJson(
+      { error: "analytics_unavailable", message: "ไม่สามารถอ่านไฟล์ quiz_response.md ได้" },
+      { status: 500 },
+    )
   }
 }
 

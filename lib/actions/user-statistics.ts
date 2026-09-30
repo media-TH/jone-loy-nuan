@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+// Portal-only reads: every export checks the admin gate (lib/security/require-admin.ts) first.
+import { adminReadClient } from "@/lib/security/require-admin";
 
 export interface UserStatistic {
   id: string;
@@ -41,7 +42,7 @@ export interface VisitorAnalytics {
 }
 
 export async function getUserStatistics(filters: UserStatisticsFilters = {}) {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
 
   let query = supabase
     .from('user_statistics')
@@ -104,7 +105,7 @@ export async function getUserStatistics(filters: UserStatisticsFilters = {}) {
 }
 
 export async function getUserStatisticsSummary() {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
 
   const { data, error } = await supabase
     .from('user_statistics')
@@ -205,7 +206,7 @@ export async function getUserStatisticsSummary() {
 }
 
 export async function getVisitorAnalytics(): Promise<VisitorAnalytics> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
 
   // 1) Find earliest record to know how many days we have
   const { data: earliestRows, error: earliestError } = await supabase

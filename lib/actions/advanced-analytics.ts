@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+// Portal-only reads: every export checks the admin gate (lib/security/require-admin.ts) first.
+import { adminReadClient } from "@/lib/security/require-admin";
 
 // Demographics Analytics
 export interface DemographicsAnalytics {
@@ -15,7 +16,7 @@ export interface DemographicsAnalytics {
 }
 
 export async function getDemographicsAnalytics(): Promise<DemographicsAnalytics[]> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   const { data, error } = await supabase
     .from('demographics_analytics')
@@ -46,7 +47,7 @@ export interface PerformanceTrend {
 }
 
 export async function getPerformanceTrends(days: number = 30): Promise<PerformanceTrend[]> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   const { data, error } = await supabase
     .from('performance_trends')
@@ -79,7 +80,7 @@ export interface QuestionPerformance {
 }
 
 export async function getQuestionPerformance(): Promise<QuestionPerformance[]> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   const { data, error } = await supabase
     .from('question_performance_detailed')
@@ -107,7 +108,7 @@ export interface DevicePlatformAnalytics {
 }
 
 export async function getDevicePlatformAnalytics(): Promise<DevicePlatformAnalytics[]> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   const { data, error } = await supabase
     .from('device_platform_analytics')
@@ -138,7 +139,7 @@ export interface KPICategoryAnalytics {
 }
 
 export async function getKPICategoryAnalytics(): Promise<KPICategoryAnalytics[]> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   const { data, error } = await supabase
     .from('kpi_category_analytics')
@@ -165,7 +166,7 @@ export interface AnswerDistribution {
 }
 
 export async function getAnswerDistribution(questionId?: string): Promise<AnswerDistribution[]> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   let query = supabase
     .from('answer_distribution_analytics')
@@ -195,7 +196,7 @@ export interface CompletionByTime {
 }
 
 export async function getCompletionByTimeAnalytics(): Promise<CompletionByTime[]> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   const { data, error } = await supabase
     .from('completion_by_time_analytics')
@@ -224,7 +225,7 @@ export interface AdvancedDashboardStats {
 }
 
 export async function getAdvancedDashboardStats(): Promise<AdvancedDashboardStats> {
-  const supabase = await createClient();
+  const supabase = await adminReadClient();
   
   // Get overall stats from quiz_sessions
   const { data: sessionStats } = await supabase
