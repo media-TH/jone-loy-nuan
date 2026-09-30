@@ -169,7 +169,8 @@ describe("controller contact", () => {
 	it("is configured only when name, address and email are all set", () => {
 		const complete = { name: "หน่วยงาน", address: "ที่อยู่", email: "privacy@example.org", dpoEmail: null };
 		expect(isControllerConfigured(complete)).toBe(true);
-		expect(isControllerConfigured({ ...complete, address: " " })).toBe(false);
+		expect(isControllerConfigured({ ...complete, address: null })).toBe(true);
+		expect(isControllerConfigured({ ...complete, name: " " })).toBe(false);
 		expect(isControllerConfigured({ ...complete, email: null })).toBe(false);
 	});
 

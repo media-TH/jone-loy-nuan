@@ -244,28 +244,34 @@ export default function PrivacyPage() {
 					<dl className="flex flex-col divide-y divide-line rounded-md border-2 border-line bg-surface-raised px-4">
 						{[
 							{ term: "ผู้ควบคุมข้อมูลส่วนบุคคล", value: <ContactValue value={CONTROLLER.name} /> },
-							{ term: "ที่อยู่", value: <ContactValue value={CONTROLLER.address} /> },
+							CONTROLLER.address?.trim()
+								? { term: "ที่อยู่", value: <ContactValue value={CONTROLLER.address} /> }
+								: null,
 							{
 								term: "อีเมลสำหรับใช้สิทธิ",
 								value: (
 									<ContactValue value={CONTROLLER.email} href={`mailto:${CONTROLLER.email ?? ""}`} />
 								),
 							},
-							{
-								term: "เจ้าหน้าที่คุ้มครองข้อมูลส่วนบุคคล (DPO)",
-								value: (
-									<ContactValue
-										value={CONTROLLER.dpoEmail}
-										href={`mailto:${CONTROLLER.dpoEmail ?? ""}`}
-									/>
-								),
-							},
-						].map((row) => (
-							<div key={row.term} className="flex flex-col gap-1 py-3 sm:flex-row sm:gap-4">
-								<dt className="type-body-sm text-ink-muted sm:w-48 sm:shrink-0">{row.term}</dt>
-								<dd className="type-body min-w-0 break-words text-ink">{row.value}</dd>
-							</div>
-						))}
+							CONTROLLER.dpoEmail?.trim()
+								? {
+										term: "เจ้าหน้าที่คุ้มครองข้อมูลส่วนบุคคล (DPO)",
+										value: (
+											<ContactValue
+												value={CONTROLLER.dpoEmail}
+												href={`mailto:${CONTROLLER.dpoEmail}`}
+											/>
+										),
+									}
+								: null,
+						]
+							.filter((row) => row !== null)
+							.map((row) => (
+								<div key={row.term} className="flex flex-col gap-1 py-3 sm:flex-row sm:gap-4">
+									<dt className="type-body-sm text-ink-muted sm:w-48 sm:shrink-0">{row.term}</dt>
+									<dd className="type-body min-w-0 break-words text-ink">{row.value}</dd>
+								</div>
+							))}
 					</dl>
 				</Section>
 

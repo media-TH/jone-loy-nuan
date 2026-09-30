@@ -335,14 +335,13 @@ export type ControllerDetails = {
  * shows CONTACT_FALLBACK in their place.
  */
 export const CONTROLLER: ControllerDetails = {
-	// TODO(legal): ชื่อนิติบุคคลผู้ควบคุมข้อมูลส่วนบุคคล — ยืนยันกับ ธปท. และกองทุนพัฒนาสื่อปลอดภัยและสร้างสรรค์
-	// ว่าหน่วยงานใดเป็นผู้ควบคุมข้อมูล หรือเป็นผู้ควบคุมข้อมูลร่วม
+	// Required: the person or team that runs the project (a named individual can be the controller).
 	name: null,
-	// TODO(legal): ที่อยู่ที่ติดต่อได้ของผู้ควบคุมข้อมูล
+	// Optional: leave null when there is no postal address to publish; the row is then hidden.
 	address: null,
-	// TODO(legal): อีเมลสำหรับรับคำขอใช้สิทธิตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล
+	// Required: an inbox someone reads, for data subject requests.
 	email: null,
-	// TODO(legal): อีเมลเจ้าหน้าที่คุ้มครองข้อมูลส่วนบุคคล (DPO) ถ้ามีการแต่งตั้ง (มาตรา 41)
+	// Optional: only when a DPO is appointed (s.41); the row is hidden otherwise.
 	dpoEmail: null,
 };
 
@@ -355,9 +354,12 @@ export function controllerValue(value: string | null | undefined): string {
 	return trimmed ? trimmed : CONTACT_FALLBACK;
 }
 
-/** True once every contact detail the notice needs has been filled in. */
+/**
+ * True once the notice can name who is responsible and how to reach them (s.23(5)): a name and an
+ * email. The postal address and DPO are optional and hidden on the page when unset.
+ */
 export function isControllerConfigured(controller: ControllerDetails = CONTROLLER): boolean {
-	return Boolean(controller.name?.trim() && controller.address?.trim() && controller.email?.trim());
+	return Boolean(controller.name?.trim() && controller.email?.trim());
 }
 
 /**
@@ -373,9 +375,9 @@ export function assertControllerConfiguredForProduction(
 ): void {
 	if (env.VERCEL_ENV !== "production" || isControllerConfigured(controller)) return;
 	throw new Error(
-		"[privacy] CONTROLLER in lib/privacy/policy.ts is not filled in (name, address, email). " +
+		"[privacy] CONTROLLER in lib/privacy/policy.ts is not filled in (name, email). " +
 			"The privacy notice cannot go to production without the data controller's identity and " +
-			"contact channel (PDPA s.23(5)). Fill it in with details confirmed by legal.",
+			"contact channel (PDPA s.23(5)). Fill in the project owner's name and a contact email.",
 	);
 }
 
