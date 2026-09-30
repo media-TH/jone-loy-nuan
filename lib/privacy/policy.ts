@@ -336,11 +336,11 @@ export type ControllerDetails = {
  */
 export const CONTROLLER: ControllerDetails = {
 	// Required: the person or team that runs the project (a named individual can be the controller).
-	name: null,
+	name: "Memographic",
 	// Optional: leave null when there is no postal address to publish; the row is then hidden.
 	address: null,
 	// Required: an inbox someone reads, for data subject requests.
-	email: null,
+	email: "memographic.dev@gmail.com",
 	// Optional: only when a DPO is appointed (s.41); the row is hidden otherwise.
 	dpoEmail: null,
 };
